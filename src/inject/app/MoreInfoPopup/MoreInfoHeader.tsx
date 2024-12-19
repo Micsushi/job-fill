@@ -20,8 +20,8 @@ export const MoreInfoHeader: FC = () => {
   } = useAppContext()
 
   const Title = (
-    <Typography variant='h5'>
-      <ExpandableText text={backend.fieldName} maxLines={1} />
+    <Typography lineHeight={"1.3rem"} variant='h6'>
+      <ExpandableText text={backend.fieldName} maxLines={3} />
     </Typography>
   )
 
