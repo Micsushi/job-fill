@@ -1,4 +1,4 @@
-import React, { useState, FC, useRef, useEffect } from 'react';
+import React, { useState, FC, useRef, useEffect, ReactNode } from 'react';
 import { Typography, Box, Link } from '@mui/material';
 import { ConditionalTooltip } from './ConditionalTooltip';
 
@@ -10,8 +10,8 @@ import { ConditionalTooltip } from './ConditionalTooltip';
  * @param param0 
  * @returns 
  */
-export const ExpandableText: FC<{ text: string; maxLines?: number; }> = ({
-  text,
+export const ExpandableText: FC<{ children: ReactNode; maxLines?: number; }> = ({
+  children,
   maxLines = 1,
 }) => {
 
@@ -25,7 +25,7 @@ export const ExpandableText: FC<{ text: string; maxLines?: number; }> = ({
       // Check if the content is overflowing
       setIsTruncated(element.scrollHeight > element.clientHeight);
     }
-  }, [text]); // Runs when the text changes
+  }, [children])
 
 
   const CollapseButton = (
@@ -43,10 +43,9 @@ export const ExpandableText: FC<{ text: string; maxLines?: number; }> = ({
   const expandable = isTruncated && !expanded
 
   return (
-    <Box>
+    <span>
       <ConditionalTooltip showIf={expandable} title="Click to expand.">
-        <Typography
-          variant="inherit"
+        <Box
           component="span"
           ref={textRef}
           sx={{
@@ -58,10 +57,10 @@ export const ExpandableText: FC<{ text: string; maxLines?: number; }> = ({
           }}
           onClick={() => expandable && setExpanded(true)}
         >
-          {text}
+          {children}
           {CollapseButton}
-        </Typography>
+        </Box>
       </ConditionalTooltip>
-    </Box>
+    </span>
   );
 };
