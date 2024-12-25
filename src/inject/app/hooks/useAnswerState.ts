@@ -2,9 +2,10 @@ import { useEffect, useState } from "react"
 import AnswerDTO from "../services/DTOs/AnswerDTO"
 import { BaseFormInput } from "../services/formFields/baseFormInput"
 import contentScriptAPI from "../services/contentScriptApi"
+import { AnswerDataTypes_Any } from "../services/DTOs/types"
 
 export type NewAnswerParams = {
-  answer: string
+  answer: AnswerDataTypes_Any
 }
 
 export type ExistingAnswerParams = {
@@ -17,7 +18,7 @@ export type AnswerState = {
 }
 
 export type AnswerActions = {
-  add: (answer: string) => Promise<void>
+  add: (answer: AnswerDataTypes_Any) => Promise<void>
   update: (answer: ExistingAnswerParams) => Promise<void>
   deleteAnswer: (id: number) => Promise<void>
 }
