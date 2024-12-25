@@ -1,41 +1,62 @@
-import React, { FC } from 'react'
-import { getElement, getElements } from '@src/shared/utils/getElements'
-import '@fontsource/roboto'
-import { v4 as uuid4 } from 'uuid'
-import { FieldPath } from '@src/shared/utils/types'
-import { AnswerValueSingleString } from '../../MoreInfoPopup/AnswerDisplay/AnswerValueDisplay/AnswerValueSingleString'
-import stringMatch from '@src/shared/utils/stringMatch'
-import { App } from '../../App'
-import { SaveButtonClickHndler, saveButtonClickHandlers } from '../../hooks/saveButtonClickHandlers'
-import { EditableAnswer } from '../../hooks/useEditableAnswerState'
-import contentScriptAPI from '../contentScriptApi'
-import AnswerDTO from '../DTOs/AnswerDTO'
+import React, { FC } from 'react';
+import { getElement, getElements } from '@src/shared/utils/getElements';
+import '@fontsource/roboto';
+import { v4 as uuid4 } from 'uuid';
+import { FieldPath } from '@src/shared/utils/types';
+import { AnswerValueSingleString } from '../../MoreInfoPopup/AnswerDisplay/AnswerValueDisplay/AnswerValueSingleString';
+import stringMatch from '@src/shared/utils/stringMatch';
+import { App } from '../../App';
+import {
+  SaveButtonClickHndler,
+  saveButtonClickHandlers,
+} from '../../hooks/saveButtonClickHandlers';
+import { EditableAnswer } from '../../hooks/useEditableAnswerState';
+import contentScriptAPI from '../contentScriptApi';
+import AnswerDTO from '../DTOs/AnswerDTO';
 
 export type AnswerValueMethods = {
-  displayComponent: FC<{ id: number }>
-  init: (_: unknown) => unknown
-  prepForSave: (_: any) => any
-  prepForFill: (answers: EditableAnswer[]) => any[]
-}
+  displayComponent: FC<{ id: number }>;
+  init: (_: unknown) => unknown;
+  prepForSave: (_: unknown) => unknown;
+  prepForFill: (answers: EditableAnswer[]) => any[];
+};
 
 export function isRegistered(el: HTMLElement): boolean {
-  return el.hasAttribute('job-app-filler')
+  return el.hasAttribute('job-app-filler');
 }
 
 export function isVisible(el: HTMLElement): boolean {
-  return el.getBoundingClientRect().height > 0
+  return el.getBoundingClientRect().height > 0;
 }
 
+
+export type AddNewAnswerComponentProps = {
+  newAnswer: unknown;
+  setNewAnswer: (_: unknown) => void;
+}
+export type CustomUIComponents = {
+  addNewAnswerComponent?: React.FC<AddNewAnswerComponentProps>;
+};
+
+/**
+ * Base class for all form fields.
+ *
+ * Each subclass should implement the following methods:
+ * - listenForChanges
+ * - fill
+ */
 export abstract class BaseFormInput {
-  answerDTOClass: typeof AnswerDTO = AnswerDTO
+  answerDTOClass: typeof AnswerDTO = AnswerDTO;
   public saveButtonClickHandler: SaveButtonClickHndler =
-    saveButtonClickHandlers.basic
+    saveButtonClickHandlers.basic;
   /** Supports Markdown */
-  fieldNotice: string | null
+  fieldNotice: string | null;
   fieldNoticeLink: {
-    url: string
-    display: string
-  }
+    url: string;
+    display: string;
+  };
+
+  public customUIComponents: CustomUIComponents = {};
 
   public get answerValue(): AnswerValueMethods {
     return {
@@ -43,61 +64,61 @@ export abstract class BaseFormInput {
       init: (answer) => structuredClone(answer),
       prepForSave: (_) => _,
       prepForFill: (answers) => answers.map((a) => a.originalAnswer.answer),
-    }
+    };
   }
 
   /**
    * The xpath used to identify the element.
    * Ususally an enclosing div since the label is contained within.
    */
-  static XPATH: string
+  static XPATH: string;
   /**
    * The parent element of the field. Should include the field and the
    * label.
    */
-  element: HTMLElement
-  uuid: string
+  element: HTMLElement;
+  uuid: string;
   /**
    * used to send message events from this class to the rendered
    * react app.
    */
-  reactMessageEventId: `reactMessage-${string}`
+  reactMessageEventId: `reactMessage-${string}`;
   /**
    * Should be the subclasses name. `this.constructor.name` doesn't
    * work because the name changes when the js is minified and this name
    * is used as part of the path to the answer.
    */
-  fieldType: string
+  fieldType: string;
 
   /**
    * for fill errors.
    */
-  public error: string | null
+  public error: string | null;
 
   abstract attachReactApp(
     app: React.ReactNode,
     inputContainer: HTMLElement
-  ): void
+  ): void;
 
   constructor(element: HTMLElement) {
-    this.element = element
-    this.uuid = uuid4()
-    this.reactMessageEventId = `reactMessage-${this.uuid}`
+    this.element = element;
+    this.uuid = uuid4();
+    this.reactMessageEventId = `reactMessage-${this.uuid}`;
     /** prevents the element from being registered twice */
-    this.element.setAttribute('job-app-filler', this.uuid)
-    this.listenForChanges()
-    this.attachReactApp(<App backend={this} />, element)
+    this.element.setAttribute('job-app-filler', this.uuid);
+    this.listenForChanges();
+    this.attachReactApp(<App backend={this} />, element);
   }
 
   static async autoDiscover(node: Node = document) {
-    const elements = getElements(node, this.XPATH)
+    const elements = getElements(node, this.XPATH);
     elements.forEach((el) => {
       if (isRegistered(el)) {
-        return
+        return;
       }
       // @ts-expect-error because this is totally fine and it works.
-      new this(el)
-    })
+      new this(el);
+    });
   }
 
   /**
@@ -106,7 +127,7 @@ export abstract class BaseFormInput {
    * call `triggerReactUpdate` on each change.
    * This method is ususally field specific.
    */
-  abstract listenForChanges(): void
+  abstract listenForChanges(): void;
 
   /**
    * communicate with the react display element by dispatching
@@ -114,11 +135,11 @@ export abstract class BaseFormInput {
    * display element is listening for.
    */
   triggerReactUpdate() {
-    this.element.dispatchEvent(new CustomEvent(this.reactMessageEventId))
+    this.element.dispatchEvent(new CustomEvent(this.reactMessageEventId));
   }
 
   public get page(): string {
-    return getElement(document, './/h2')?.innerText || ''
+    return getElement(document, './/h2')?.innerText || '';
   }
 
   /**
@@ -130,24 +151,24 @@ export abstract class BaseFormInput {
     const XPATH = [
       './/*[self::label or self::legend]',
       "[.//text()[(normalize-space() != '')]]",
-    ].join('')
-    return getElement(this.element, XPATH)
+    ].join('');
+    return getElement(this.element, XPATH);
   }
 
   public get fieldName(): string {
-    return this.labelElement?.innerText
+    return this.labelElement?.innerText;
   }
 
   /**
    * A section is a grouping of fields that can be repeating
    * e.g. work history.
    * In such cases the form field name can appear twice on a page.
-   * 
+   *
    * must always return a string, even a blank one
    * Job site specific
    */
   public get section(): string {
-    return ''
+    return '';
   }
 
   public get path(): FieldPath {
@@ -156,10 +177,10 @@ export abstract class BaseFormInput {
       section: this.section,
       fieldType: this.fieldType,
       fieldName: this.fieldName,
-    }
+    };
   }
 
-  abstract currentValue(): any
+  abstract currentValue(): any;
 
   // public get fieldSnapshot() {
   //   return {
@@ -176,8 +197,8 @@ export abstract class BaseFormInput {
   // }
 
   async deleteAnswer(id: number): Promise<boolean> {
-    const res = await contentScriptAPI.deleteAnswer(id)
-    return res.ok
+    const res = await contentScriptAPI.deleteAnswer(id);
+    return res.ok;
   }
 
   // async answer(path?: FieldPath): Promise<Answer106[]> {
@@ -192,11 +213,11 @@ export abstract class BaseFormInput {
   // }
 
   public clickIsInFormfield(e: PointerEvent) {
-    return e.composedPath().includes(this.element)
+    return e.composedPath().includes(this.element);
   }
 
   public isFilled(current: any, stored: any[]): boolean {
-    return stored.some((answer) => stringMatch.exact(current, answer))
+    return stored.some((answer) => stringMatch.exact(current, answer));
   }
 
   /**
@@ -204,5 +225,5 @@ export abstract class BaseFormInput {
    *
    * for most fields it's enough to put the actual filling logic in the `fillField` method.
    */
-  abstract fill(answers: AnswerDTO<any>[]): Promise<void>
+  abstract fill(answers: AnswerDTO[]): Promise<void>;
 }
