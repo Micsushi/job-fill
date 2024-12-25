@@ -78,11 +78,11 @@ export const useEditableAnswerState = (
   }
 
   const init: EditableAnswerState['init'] = async () => {
-    const originalAnswers = await contentScriptAPI.getAnswers(backend.path, backend.answerDTOClass)
-    const editableAnswers = originalAnswers.map<EditableAnswer>((answer) =>
-      initAnswer(answer)
-    )
-    setAnswers(editableAnswers)
+    // const originalAnswers = await contentScriptAPI.getAnswers(backend.path, backend.answerDTOClass)
+    // const editableAnswers = originalAnswers.map<EditableAnswer>((answer) =>
+    //   initAnswer(answer)
+    // )
+    // setAnswers(editableAnswers)
   }
 
   const addNewAnswer: EditableAnswerState['addNewAnswer'] = (path, value) => {
