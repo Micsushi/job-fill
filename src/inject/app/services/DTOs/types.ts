@@ -1,15 +1,21 @@
-export type DataType = "string"
+export type AnswerDataTypes_RelativeDate = string;
+export type AnswerDataTypes_MonthDayYear = [string, string, string] | AnswerDataTypes_RelativeDate;
+export type AnswerDataTypes_MonthYear = [string, string];
+export type AnswerDataTypes_File = {
+  body: string;
+  lastModified: number;
+  name: string;
+  size: number;
+  type: string;
+};
+export type AnswerDataTypes_Any =
+  | AnswerDataTypes_MonthDayYear
+  | AnswerDataTypes_MonthYear
+  | AnswerDataTypes_File
+  | AnswerDataTypes_File[]
+  | string
+  | string[]
+  | boolean
+  | number;
 
-export namespace AnswerDataTypes {
-    export type relativeDate = string
-    export type MonthDayYear = [string, string, string] | relativeDate
-    export type MonthYear = [string, string]
-    export type File = {
-        body: string,
-        lastModified: number,
-        name: string,
-        size: number,
-        type: string
-    }
-    export type Any = MonthDayYear | MonthYear | File | File[] | string | string[] | boolean | number
-}
+
