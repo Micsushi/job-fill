@@ -17,13 +17,12 @@ import React, { FC } from 'react'
 import { useAppContext } from '../context/AppContext'
 import { CheckCircleIcon, DeleteIcon } from '@src/shared/utils/icons'
 import AnswerDTO from '../services/DTOs/AnswerDTO'
-import { ConfirmationDialog, ConfirmButton, ConfirmButton2 } from '../components/ConfirmButton'
+import { ConfirmationDialog } from '../components/ConfirmButton'
 
 const TH = styled(TableCell)(({ theme }) => ({
   fontSize: '1rem',
   fontWeight: 600,
-  padding: 6
-  
+  padding: 6,
 }));
 
 const TD = styled(TableCell)(({ theme }) => ({
@@ -47,8 +46,8 @@ const AnswerRow: FC<{ answerDTO: AnswerDTO }> = ({ answerDTO }) => {
   )
 
   const DeleteButton = (
-    <ConfirmationDialog 
-      dialogContent="Are You Sure?" 
+    <ConfirmationDialog
+      dialogContent="Are You Sure?"
       dialogTitle="Are you Sure you want to delete this answer? This action is not reversible."
     >
       <IconButton onClick={() => answers.deleteAnswer(id)}><DeleteIcon /></IconButton>
