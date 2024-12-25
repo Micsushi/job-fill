@@ -20,11 +20,12 @@ export const ContextProvider: FC<{
   children: ReactNode
   backend: BaseFormInput
 }> = ({ children, backend }) => {
-  const [currentValue, setCurrentValue] = useState<any>(null)
+  const [currentValue, setCurrentValue] = useState<unknown>(null)
   const [fillButtonDisabled, setFillButtonDisabled] = useState<boolean>(false)
   const answers = useAnswerState(backend)
   
-  const { fieldNotice, saveButtonClickHandler } = backend
+  const { fieldNotice, saveButtonClickHandler, customUIComponents: {addNewAnswerComponent} } = backend
+
   const [hasFilledOnce, setHasFilledOnce] = useState<boolean>(false)
 
 
@@ -88,6 +89,7 @@ export const ContextProvider: FC<{
     refreshCurrentValue,
     init,
     answers,
+    addNewAnswerComponent,
     deleteAnswer,
     currentValue,
     setCurrentValue,
