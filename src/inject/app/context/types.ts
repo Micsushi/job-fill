@@ -13,7 +13,7 @@ export type LocalAnswer = [string, Boolean]
 
 
 export interface AppContextType {
-  backend: BaseFormInput<any>
+  backend: BaseFormInput
   refreshCurrentValue: () => Promise<void>
   init: () => Promise<void>
   answers: AnswerState & AnswerActions

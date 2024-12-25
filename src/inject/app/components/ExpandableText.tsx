@@ -1,23 +1,20 @@
 import React, { useState, FC, useRef, useEffect, ReactNode } from 'react';
-import { Typography, Box, Link } from '@mui/material';
+import { Box, Link } from '@mui/material';
 import { ConditionalTooltip } from './ConditionalTooltip';
-
-
 
 /**
  * Full featured expandable text...
  * If text is truncated, has a tooltip and expands on click.
- * @param param0 
- * @returns 
+ * @param param0
+ * @returns
  */
-export const ExpandableText: FC<{ children: ReactNode; maxLines?: number; }> = ({
+export const ExpandableText: FC<{ children: ReactNode; maxLines?: number }> = ({
   children,
   maxLines = 1,
 }) => {
-
   const [expanded, setExpanded] = useState(false);
-  const textRef = useRef<HTMLElement>(null)
-  const [isTruncated, setIsTruncated] = useState(false)
+  const textRef = useRef<HTMLElement>(null);
+  const [isTruncated, setIsTruncated] = useState(false);
 
   useEffect(() => {
     const element = textRef.current;
@@ -25,22 +22,20 @@ export const ExpandableText: FC<{ children: ReactNode; maxLines?: number; }> = (
       // Check if the content is overflowing
       setIsTruncated(element.scrollHeight > element.clientHeight);
     }
-  }, [children])
+  }, [children]);
 
-
-  const CollapseButton = (
-    expanded &&
+  const CollapseButton = expanded && (
     <Link
       component="span"
-      variant='body1'
+      variant="body1"
       sx={{ ml: 1 }}
       onClick={() => setExpanded(false)}
     >
       Collapse
     </Link>
-  )
+  );
 
-  const expandable = isTruncated && !expanded
+  const expandable = isTruncated && !expanded;
 
   return (
     <span>

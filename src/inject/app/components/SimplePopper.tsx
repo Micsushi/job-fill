@@ -1,26 +1,28 @@
-import { Popper } from '@mui/material'
-import { styled, css } from '@mui/system'
-import React, { useState, MutableRefObject, FC } from 'react'
-
+import { Popper, PopperPlacementType } from '@mui/material';
+import { styled, css } from '@mui/system';
+import React, { MutableRefObject, FC } from 'react';
 
 export const SimplePopper: FC<{
-  anchorRef: MutableRefObject<any>
-  message: string | null
-  placement?: any
-
-}> = ({ anchorRef, message, placement = "bottom" }) => {
-  const id = 'simple-popper'
+  anchorRef: MutableRefObject<HTMLElement | null>;
+  message: string | null;
+  placement?: PopperPlacementType;
+}> = ({ anchorRef, message, placement = 'bottom' }) => {
+  const id = 'simple-popper';
   return (
     <>
       {message && (
-        <Popper id={id} open={true} anchorEl={anchorRef.current} placement={placement}>
+        <Popper
+          id={id}
+          open={true}
+          anchorEl={anchorRef.current}
+          placement={placement}
+        >
           <StyledPopperDiv>{message}</StyledPopperDiv>
         </Popper>
       )}
     </>
-  )
-}
-
+  );
+};
 
 const grey = {
   50: '#F3F6F9',
@@ -33,9 +35,7 @@ const grey = {
   700: '#434D5B',
   800: '#303740',
   900: '#1C2025',
-}
-
-
+};
 
 const StyledPopperDiv = styled('div')(
   ({ theme }) => css`
@@ -53,4 +53,4 @@ const StyledPopperDiv = styled('div')(
     opacity: 1;
     margin: 0.25rem 0;
   `
-)
+);

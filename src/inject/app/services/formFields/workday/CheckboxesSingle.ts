@@ -39,7 +39,7 @@ export class CheckboxesSingle extends WorkdayBaseInput {
   }
 
   listenForChanges(): void {
-    this.element.addEventListener('change', (e) => {
+    this.element.addEventListener('change', () => {
       this.triggerReactUpdate()
     })
   }
@@ -58,7 +58,7 @@ export class CheckboxesSingle extends WorkdayBaseInput {
   }
 
   public isFilled(current: any, stored: any[]): boolean {
-    return stored.some((answer) => stringMatch.contains(current, answer))
+    return stored.some((answer) => stringMatch.contains(current, answer));
   }
 
   getCheckboxElement(answer: string): HTMLInputElement {

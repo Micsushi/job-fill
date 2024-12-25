@@ -5,7 +5,7 @@ import { Answer106, FieldPath, ResponseBody } from "@src/shared/utils/types";
 
 const client = new Client(process.env.CONTENT_SCRIPT_URL)
 
-type NewAnswer = { question: string, answer: any, section: string, fieldType: string }
+type NewAnswer = { question: string, answer: unknown, section: string, fieldType: string }
 
 const addAnswer = async (newAnswer: NewAnswer, DTOClass: typeof AnswerDTO) => {
     const {section, question, answer, fieldType} = newAnswer
@@ -24,7 +24,7 @@ const addAnswer = async (newAnswer: NewAnswer, DTOClass: typeof AnswerDTO) => {
 }
 
 
-const updateAnswer = async (answer: any, DTOClass: typeof AnswerDTO): Promise<ResponseBody<AnswerDTO>> => {
+const updateAnswer = async (answer: unknown, DTOClass: typeof AnswerDTO): Promise<ResponseBody<AnswerDTO>> => {
     const resp = await client.send("updateAnswer", answer)
     if (resp.ok) {
         resp.data = DTOClass.from106(resp.data)

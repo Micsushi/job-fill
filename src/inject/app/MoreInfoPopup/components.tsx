@@ -10,7 +10,7 @@ export const Item = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(1),
   color: theme.palette.text.secondary,
   elevation: 6,
-}))
+}));
 
 export const FieldNotice: FC<{ children: string }> = ({ children }) => {
   return (

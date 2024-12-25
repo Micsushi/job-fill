@@ -18,7 +18,7 @@ export const useAppContext = () => useContext(AppContext)
 
 export const ContextProvider: FC<{
   children: ReactNode
-  backend: BaseFormInput<any>
+  backend: BaseFormInput
 }> = ({ children, backend }) => {
   const [currentValue, setCurrentValue] = useState<any>(null)
   const [fillButtonDisabled, setFillButtonDisabled] = useState<boolean>(false)

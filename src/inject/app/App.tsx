@@ -27,7 +27,7 @@ const Main: FC = () => {
 }
 
 export const App: React.FC<{
-  backend: BaseFormInput<any>
+  backend: BaseFormInput
 }> = ({ backend }) => {
   return (
     <ContextProvider backend={backend}>

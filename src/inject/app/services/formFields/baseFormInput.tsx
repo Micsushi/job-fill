@@ -2,18 +2,18 @@ import React, { FC } from 'react'
 import { getElement, getElements } from '@src/shared/utils/getElements'
 import '@fontsource/roboto'
 import { v4 as uuid4 } from 'uuid'
-import { Answer106, FieldPath } from '@src/shared/utils/types'
+import { FieldPath } from '@src/shared/utils/types'
 import { AnswerValueSingleString } from '../../MoreInfoPopup/AnswerDisplay/AnswerValueDisplay/AnswerValueSingleString'
 import stringMatch from '@src/shared/utils/stringMatch'
 import { App } from '../../App'
 import { SaveButtonClickHndler, saveButtonClickHandlers } from '../../hooks/saveButtonClickHandlers'
-import { EditableAnswer, useEditableAnswerState } from '../../hooks/useEditableAnswerState'
-import  contentScriptAPI  from '../contentScriptApi'
+import { EditableAnswer } from '../../hooks/useEditableAnswerState'
+import contentScriptAPI from '../contentScriptApi'
 import AnswerDTO from '../DTOs/AnswerDTO'
 
 export type AnswerValueMethods = {
   displayComponent: FC<{ id: number }>
-  init: (_: any) => any
+  init: (_: unknown) => unknown
   prepForSave: (_: any) => any
   prepForFill: (answers: EditableAnswer[]) => any[]
 }
@@ -26,7 +26,7 @@ export function isVisible(el: HTMLElement): boolean {
   return el.getBoundingClientRect().height > 0
 }
 
-export abstract class BaseFormInput<AnswerType = any> {
+export abstract class BaseFormInput {
   answerDTOClass: typeof AnswerDTO = AnswerDTO
   public saveButtonClickHandler: SaveButtonClickHndler =
     saveButtonClickHandlers.basic
@@ -95,8 +95,8 @@ export abstract class BaseFormInput<AnswerType = any> {
       if (isRegistered(el)) {
         return
       }
-        // @ts-ignore
-        new this(el)
+      // @ts-expect-error because this is totally fine and it works.
+      new this(el)
     })
   }
 
@@ -133,7 +133,7 @@ export abstract class BaseFormInput<AnswerType = any> {
     ].join('')
     return getElement(this.element, XPATH)
   }
-  
+
   public get fieldName(): string {
     return this.labelElement?.innerText
   }

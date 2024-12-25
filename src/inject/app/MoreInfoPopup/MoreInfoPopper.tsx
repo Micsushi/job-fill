@@ -1,12 +1,12 @@
-import { Box, Fade, Paper, Popper } from '@mui/material'
-import React, { FC } from 'react'
-import { useAppContext } from '../context/AppContext'
-import MoreInfoContainer from './MoreInfoContainer'
+import { Box, Fade, Paper, Popper } from '@mui/material';
+import React, { FC } from 'react';
+import { useAppContext } from '../context/AppContext';
+import MoreInfoContainer from './MoreInfoContainer';
 
 export const MoreInfoPopper: FC = () => {
   const {
     moreInfoPopper: { isOpen, popperRef, anchorEl },
-  } = useAppContext()
+  } = useAppContext();
 
   return (
     <Popper
@@ -30,5 +30,5 @@ export const MoreInfoPopper: FC = () => {
         </Fade>
       )}
     </Popper>
-  )
-}
+  );
+};

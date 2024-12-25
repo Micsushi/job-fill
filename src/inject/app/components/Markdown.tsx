@@ -1,7 +1,7 @@
-import { Button, ButtonTypeMap } from '@mui/material'
-import React, { FC } from 'react'
-import { OpenInNewIcon } from '@src/shared/utils/icons'
-import MuiMarkdown, { getOverrides, MuiMarkdownProps } from 'mui-markdown'
+import { Button } from '@mui/material';
+import React, { FC } from 'react';
+import { OpenInNewIcon } from '@src/shared/utils/icons';
+import MuiMarkdown, { getOverrides, MuiMarkdownProps } from 'mui-markdown';
 
 const MarkdownLink: FC<{ children: string; href: string }> = ({
   children,
@@ -17,13 +17,13 @@ const MarkdownLink: FC<{ children: string; href: string }> = ({
     >
       {children}
     </Button>
-  )
-}
+  );
+};
 
 export const Markdown: FC<MuiMarkdownProps> = ({ children }) => {
   return (
     <MuiMarkdown overrides={{ ...getOverrides(), a: MarkdownLink }}>
       {children}
     </MuiMarkdown>
-  )
-}
+  );
+};
