@@ -1,37 +1,28 @@
 import {
   IconButton,
   Paper,
-  styled,
   Table,
   TableBody,
-  TableCell,
   TableContainer,
   TableHead,
   TableRow,
   Tooltip,
 } from '@mui/material';
 import React, { FC } from 'react';
-
-import { useAppContext } from '../context/AppContext';
 import { CheckCircleIcon, DeleteIcon } from '@src/shared/utils/icons';
-import AnswerDTO from '../services/DTOs/AnswerDTO';
-import { ConfirmationDialog } from '../components/ConfirmButton';
+import { useAppContext } from '../../context/AppContext';
+import { ConfirmationDialog } from '../../components/ConfirmButton';
+import AnswerDTO from '../../services/DTOs/AnswerDTO';
+import AddNewAnswerContainer from './AddNew/AddNewAnswerContainer';
+import { TD, TH } from './components';
 
-const TH = styled(TableCell)(() => ({
-  fontSize: '1rem',
-  fontWeight: 600,
-  padding: 6,
-}));
 
-const TD = styled(TableCell)(() => ({
-  verticalAlign: 'top',
-  padding: 6,
-}));
+
 
 const AnswerRow: FC<{ answerDTO: AnswerDTO }> = ({ answerDTO }) => {
-  const { id, fieldName, match, section, answer } = answerDTO;
+  const { id, fieldName, match, section } = answerDTO;
   const { answers } = useAppContext();
-
+  
   const MatchValue =
     match.type === 'exact' ? (
       <Tooltip title="Exact Match">
@@ -60,7 +51,7 @@ const AnswerRow: FC<{ answerDTO: AnswerDTO }> = ({ answerDTO }) => {
       </TD>
       <TD>{fieldName}</TD>
       {section && <TD>{section}</TD>}
-      <TD>{answer.toString()}</TD>
+      <TD>{answerDTO.forDisplay}</TD>
       <TD>{DeleteButton}</TD>
     </TableRow>
   );
@@ -91,6 +82,7 @@ export const Answers: FC = () => {
           {data.map((answerDTO) => (
             <AnswerRow key={answerDTO.id} answerDTO={answerDTO} />
           ))}
+          <AddNewAnswerContainer />
         </TableBody>
       </Table>
     </TableContainer>
