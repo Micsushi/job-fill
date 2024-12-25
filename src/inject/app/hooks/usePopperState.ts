@@ -11,8 +11,8 @@ import { AppContextType } from '../context/types'
 
 
 export type PopperState = {
-  anchorRef: MutableRefObject<any>
-  popperRef: MutableRefObject<any>
+  anchorRef: MutableRefObject<HTMLDivElement>
+  popperRef: MutableRefObject<HTMLDivElement>
   anchorEl: HTMLElement
   setAnchorEl: Dispatch<SetStateAction<HTMLElement>>
   isOpen: boolean
@@ -66,13 +66,20 @@ export const usePopperState = ({init, backend}:PopperStateArgs ): PopperState =>
 
   const handleClickAway = (e: PointerEvent) => {
     const { x, y } = e
-    const rects = [,
+    const rects = [
       popperRef.current?.getBoundingClientRect(),
     ]
     const isInModal = () => e.composedPath().some((el: HTMLElement) => {
       return el?.classList?.contains("MuiModal-root")
     })
-    const isInside = isInRect(x, y, rects) || backend.clickIsInFormfield(e) || isInModal()
+    const isDownloadClick = (e.target as HTMLElement).id === 'jaf-temp-download-link'
+    
+    const isInside =
+      isInRect(x, y, rects) ||
+      backend.clickIsInFormfield(e) ||
+      isInModal() ||
+      isDownloadClick;
+
     if (!isInside) {
       document.removeEventListener('click', handleClickAway)
       close()
