@@ -3,8 +3,9 @@ import { useAppContext } from '@src/inject/app/context/AppContext';
 import { AddIcon, CheckIcon, CloseIcon } from '@src/shared/utils/icons';
 import React, { FC } from 'react';
 import { TD } from '../components';
+import { AnswerDataTypes_Any } from '@src/inject/app/services/DTOs/types';
 
-type NewAnswerType = unknown
+
 
 const AddNewAnswerContainer: FC = () => {
   const { backend, answers } = useAppContext();
@@ -13,10 +14,10 @@ const AddNewAnswerContainer: FC = () => {
   }
 
   const [show, setShow] = React.useState(false);
-  const [newAnswer, setNewAnswer] = React.useState<NewAnswerType>(null);
+  const [newAnswer, setNewAnswer] = React.useState<AnswerDataTypes_Any>(null);
 
   const handleSave = async () => {
-    await answers.add(newAnswer as string);
+    await answers.add(newAnswer);
     setShow(false);
   };
 
