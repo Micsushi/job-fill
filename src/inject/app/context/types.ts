@@ -8,7 +8,7 @@ export type FillButtonState = {
   isFilled: boolean
 }
 
-export type LocalAnswer = [string, Boolean]
+export type LocalAnswer = [string, boolean]
 
 
 
@@ -17,13 +17,13 @@ export interface AppContextType {
   refreshCurrentValue: () => Promise<void>
   init: () => Promise<void>
   answers: AnswerState & AnswerActions
+  addNewAnswerComponent: React.FC | null
   fillButton: FillButtonState
   saveButton: SaveButtonState
   deleteAnswer: (id: number) => Promise<void>
-  currentValue: any
-  setCurrentValue: (_: any) => void
+  currentValue: unknown
+  setCurrentValue: (_: unknown) => void
   isFilled: boolean
-  // editableAnswerState: EditableAnswerState
   moreInfoPopper: PopperState
   fieldNotice: string | null
 }
