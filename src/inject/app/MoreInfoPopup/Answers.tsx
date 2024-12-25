@@ -1,4 +1,7 @@
 import {
+  Button,
+  IconButton,
+  Link,
   Paper,
   styled,
   Table,
@@ -14,15 +17,18 @@ import React, { FC } from 'react'
 import { useAppContext } from '../context/AppContext'
 import { CheckCircleIcon, DeleteIcon } from '@src/shared/utils/icons'
 import AnswerDTO from '../services/DTOs/AnswerDTO'
-import { ConfirmButton } from '../components/ConfirmButton'
+import { ConfirmationDialog, ConfirmButton, ConfirmButton2 } from '../components/ConfirmButton'
 
 const TH = styled(TableCell)(({ theme }) => ({
   fontSize: '1rem',
   fontWeight: 600,
+  padding: 6
+  
 }));
 
 const TD = styled(TableCell)(({ theme }) => ({
-  verticalAlign: "top"
+  verticalAlign: "top",
+  padding: 6
 }));
 
 const AnswerRow: FC<{ answerDTO: AnswerDTO }> = ({ answerDTO }) => {
@@ -41,20 +47,16 @@ const AnswerRow: FC<{ answerDTO: AnswerDTO }> = ({ answerDTO }) => {
   )
 
   const DeleteButton = (
-
-      <ConfirmButton
-        component="IconButton"
-        action={() => answers.deleteAnswer(id)}
-        dialogTitle="Are You Sure?"
-        buttonContent={<DeleteIcon />}
-      >
-        Are you Sure you want to delete this answer? This action is
-        not reversible.
-      </ConfirmButton>
+    <ConfirmationDialog 
+      dialogContent="Are You Sure?" 
+      dialogTitle="Are you Sure you want to delete this answer? This action is not reversible."
+    >
+      <IconButton onClick={() => answers.deleteAnswer(id)}><DeleteIcon /></IconButton>
+    </ConfirmationDialog>
   )
   return (
     <TableRow>
-      <TD>{MatchValue}</TD>
+      <TD align='right' width={"auto"}>{MatchValue}</TD>
       <TD >{fieldName}</TD>
       {section && <TD>{section}</TD>}
       <TD>{answer.toString()}</TD>
@@ -67,10 +69,10 @@ export const Answers: FC = () => {
   const { backend, answers: { data } } = useAppContext()
   return (
     <TableContainer sx={{ width: "100%" }} component={Paper}>
-      <Table sx={{ width: "100%" }} size='small' stickyHeader>
+      <Table sx={{ width: "100%", tableLayout: "auto" }} size='small' stickyHeader>
         <TableHead>
           <TableRow >
-            <TH></TH>
+            <TH width={"auto"}></TH>
             <TH >Question</TH>
             {backend.section && <TH>Section</TH>}
             <TH>Answer</TH>
