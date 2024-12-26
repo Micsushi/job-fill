@@ -8,7 +8,7 @@ import { scrollBack } from '@src/shared/utils/scroll'
 import { xpaths } from './xpaths'
 import { answerValueInitList } from '../../../hooks/answerValueInit'
 import { EditableAnswer } from '../../../hooks/useEditableAnswerState'
-import AnswerDTO from '../../DTOs/AnswerDTO'
+import StringAnswerDTO from '../../DTOs/StringAnswerDTO'
 
 export class CheckboxesSingle extends WorkdayBaseInput {
   static XPATH: string = xpaths.MULTI_CHECKBOX
@@ -77,7 +77,7 @@ export class CheckboxesSingle extends WorkdayBaseInput {
   //   }
   // }
 
-  async fill(answers: AnswerDTO<string>[]): Promise<void> {
+  async fill(answers: StringAnswerDTO[]): Promise<void> {
     await fieldFillerQueue.enqueue(async () => {
       await scrollBack(async () => {
         if (this.selectedCheckBoxElement) {
