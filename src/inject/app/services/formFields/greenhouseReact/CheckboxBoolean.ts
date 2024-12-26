@@ -1,63 +1,59 @@
-import { AnswerValueSingleBool } from "../../../MoreInfoPopup/AnswerDisplay/AnswerValueDisplay/AnswerValueSingleBool";
-import fieldFillerQueue from "@src/shared/utils/fieldFillerQueue";
-import { getElement } from "@src/shared/utils/getElements";
-import { AnswerValueMethods } from "../baseFormInput";
-import { GreenhouseReactBaseInput } from "./GreenhouseReactBaseInput";
-import { xpaths } from "./xpaths";
-import { CheckboxWrapperContainer } from "./ElementWrappers/CheckboxWrapperContainer";
-import AnswerDTO from "../../DTOs/AnswerDTO";
-
+import { AnswerValueSingleBool } from '../../../MoreInfoPopup/AnswerDisplay/AnswerValueDisplay/AnswerValueSingleBool';
+import fieldFillerQueue from '@src/shared/utils/fieldFillerQueue';
+import { getElement } from '@src/shared/utils/getElements';
+import { AnswerValueMethods } from '../baseFormInput';
+import { GreenhouseReactBaseInput } from './GreenhouseReactBaseInput';
+import { xpaths } from './xpaths';
+import { CheckboxWrapperContainer } from './ElementWrappers/CheckboxWrapperContainer';
+import AnswerDTO from '../../DTOs/AnswerDTO';
 
 export class CheckboxBoolean extends GreenhouseReactBaseInput {
-  static XPATH = xpaths.CHECKBOX_BOOLEAN
-  fieldType: string = 'SingleCheckbox'
-  public answerValueDisplayComponent = AnswerValueSingleBool
+  static XPATH = xpaths.CHECKBOX_BOOLEAN;
+  fieldType: string = 'SingleCheckbox';
+  public answerValueDisplayComponent = AnswerValueSingleBool;
   public get answerValue() {
     return {
       ...super.answerValue,
-      displayComponent: AnswerValueSingleBool
-    } as AnswerValueMethods
+      displayComponent: AnswerValueSingleBool,
+    } as AnswerValueMethods;
   }
 
   get labelElement(): HTMLElement {
-    return this.element
+    return this.element;
   }
 
   get labelDisplayElement() {
-    return getElement(this.element, `.//legend`)
+    return getElement(this.element, `.//legend`);
   }
 
   listenForChanges(): void {
-    this.element.addEventListener("click", (e) => {
-      const { tagName } = (e.target as HTMLElement)
-      if (tagName === "INPUT") {
-        this.triggerReactUpdate()
+    this.element.addEventListener('click', (e) => {
+      const { tagName } = e.target as HTMLElement;
+      if (tagName === 'INPUT') {
+        this.triggerReactUpdate();
       }
-    })
+    });
   }
 
   currentValue() {
-    return this.checkboxWrapper.checked
+    return this.checkboxWrapper.checked;
   }
 
   get checkboxWrapper(): CheckboxWrapperContainer {
-    const el = getElement(
-      this.element,
-      `.//div[@class="checkbox__wrapper"]`
-    )
-    return new CheckboxWrapperContainer(el)
+    const el = getElement(this.element, `.//div[@class="checkbox__wrapper"]`);
+    return new CheckboxWrapperContainer(el);
   }
 
   public isFilled(current: any, stored: any[]): boolean {
-    return current === stored[0]
+    return current === stored[0];
   }
 
-  async fill(answers: AnswerDTO<boolean>[]): Promise<void> {
+  async fill(answers: AnswerDTO[]): Promise<void> {
     await fieldFillerQueue.enqueue(async () => {
-      const firstAnswer = answers[0].answer
+      const firstAnswer = answers[0].answer;
       if (!(this.currentValue() === firstAnswer)) {
-        this.checkboxWrapper.check()
+        this.checkboxWrapper.check();
       }
-    })
+    });
   }
 }
