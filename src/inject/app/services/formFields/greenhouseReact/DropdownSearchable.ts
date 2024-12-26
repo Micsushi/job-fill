@@ -8,7 +8,7 @@ import { scrollBack } from '@src/shared/utils/scroll'
 import { getReactProps } from '../utils'
 import { GreenhouseReactBaseInput } from './GreenhouseReactBaseInput'
 import { xpaths } from './xpaths'
-import AnswerDTO from '../../DTOs/AnswerDTO'
+import StringAnswerDTO from '../../DTOs/StringAnswerDTO'
 
 export class DropdownSearchable extends GreenhouseReactBaseInput {
   static XPATH = xpaths.DROPDOWN_SEARCHABLE
@@ -54,7 +54,7 @@ export class DropdownSearchable extends GreenhouseReactBaseInput {
     return new Elements(this.element)
   }
 
-  async fill(answers: AnswerDTO<string>[]): Promise<void> {
+  async fill(answers: StringAnswerDTO[]): Promise<void> {
     // TODO: break out dropdown as separate component.
     await fieldFillerQueue.enqueue(async () => {
       await scrollBack(async () => {
@@ -64,15 +64,13 @@ export class DropdownSearchable extends GreenhouseReactBaseInput {
           const choices = await this.elements.waitForChoices()
           if (choices.length < 100) {
             for (const storedAnswer of answers) {
-              const answerValue = storedAnswer.answer
-              if (await this.dropdown.fill(answerValue)) {
-                break
+              if (await this.dropdown.fill(storedAnswer.answer)) {
+                break;
               }
             }
           } else {
             for (const storedAnswer of answers) {
-              const answerValue = storedAnswer.answer
-              if (await this.dropdown.fillBySearch(answerValue)) {
+              if (await this.dropdown.fillBySearch(storedAnswer.answer)) {
                 break
               }
             }
@@ -132,7 +130,7 @@ class DropdownContainer {
     return false
   }
 
-  async fillBySearch(value: string): Promise<Boolean> {
+  async fillBySearch(value: string): Promise<boolean> {
     this.performSearch(value)
     const correctAnswerElement = await this.elements.waitForCorrectAnswer(value)
     if (correctAnswerElement) {

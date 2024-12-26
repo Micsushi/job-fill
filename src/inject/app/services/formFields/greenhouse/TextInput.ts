@@ -1,11 +1,10 @@
 import { getElement } from '@src/shared/utils/getElements'
 import { GreenhouseBaseInput } from './GreenhouseBaseInput'
 import { xpaths } from './xpaths'
-import StringDTO from '../../DTOs/StringDTO'
-import AnswerDTO from '../../DTOs/AnswerDTO'
+import StringAnswerDTO from '../../DTOs/StringAnswerDTO'
 
 export class TextInput extends GreenhouseBaseInput {
-  DTO = StringDTO
+  answerDTOClass = StringAnswerDTO
   static XPATH = xpaths.TEXT_FIELD
   fieldType = 'TextInput'
 
@@ -25,7 +24,7 @@ export class TextInput extends GreenhouseBaseInput {
     return this.inputElement()?.value
   }
   
-  async fill(answers: AnswerDTO<string>[]): Promise<void> {
+  async fill(answers: StringAnswerDTO[]): Promise<void> {
     if (!this.inputElement) {
       return
     }

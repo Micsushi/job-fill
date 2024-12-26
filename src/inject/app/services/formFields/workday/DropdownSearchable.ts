@@ -6,8 +6,7 @@ import { Answer106 } from '@src/shared/utils/types'
 import { WorkdayBaseInput } from './WorkdayBaseInput'
 import { getReactProps } from '../utils'
 import { xpaths } from './xpaths'
-import { useEditableAnswerState } from '../../../hooks/useEditableAnswerState'
-import AnswerDTO from '../../DTOs/AnswerDTO'
+import StringAnswerDTO from '../../DTOs/StringAnswerDTO'
 
 export class DropdownSearchable extends WorkdayBaseInput {
   static XPATH = xpaths.SEARCHABLE_SINGLE_DROPDOWN
@@ -118,7 +117,7 @@ export class DropdownSearchable extends WorkdayBaseInput {
    * Doing this may open the dropdown, so it needs to be closed.
    * if awaiting for the the fill method, the dropdown is closed asynchronously
    */
-  async fill(answers: AnswerDTO[]): Promise<void> {
+  async fill(answers: StringAnswerDTO[]): Promise<void> {
     await fieldFillerQueue.enqueue(async () => {
       await scrollBack(async () => {
         const answerValues = answers

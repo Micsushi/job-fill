@@ -3,7 +3,7 @@ import fieldFillerQueue from '@src/shared/utils/fieldFillerQueue'
 import { getElement, waitForElement } from '@src/shared/utils/getElements'
 import { GreenhouseBaseInput } from './GreenhouseBaseInput'
 import { xpaths } from './xpaths'
-import AnswerDTO from '../../DTOs/AnswerDTO'
+import StringAnswerDTO from '../../DTOs/StringAnswerDTO'
 
 
 export class AddressSearchable extends GreenhouseBaseInput {
@@ -18,7 +18,7 @@ export class AddressSearchable extends GreenhouseBaseInput {
   }
 
   listenForChanges(): void {
-    const observer = new MutationObserver((mutationsList) => {
+    const observer = new MutationObserver(() => {
       this.triggerReactUpdate()
     })
     // Set the observer to watch for attribute changes
@@ -36,7 +36,7 @@ export class AddressSearchable extends GreenhouseBaseInput {
     return this.autoCompleteElement.getAttribute('value') || ''
   }
 
-  async fill(answers: AnswerDTO<string>[]): Promise<void> {
+  async fill(answers: StringAnswerDTO[]): Promise<void> {
     if (!this.inputElement) {
       return
     }
@@ -56,6 +56,8 @@ export class AddressSearchable extends GreenhouseBaseInput {
           this.element,
           correctAnswerXpath
         )
+
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         correctAnswerElement && correctAnswerElement.click()
         if (this.currentValue() === answer.answer) {
           return

@@ -1,8 +1,7 @@
-import fieldFillerQueue from "@src/shared/utils/fieldFillerQueue";
 import { getElement } from "@src/shared/utils/getElements";
 import { GreenhouseBaseInput } from "./GreenhouseBaseInput";
 import { xpaths } from './xpaths'
-import AnswerDTO from "../../DTOs/AnswerDTO";
+import StringAnswerDTO from "../../DTOs/StringAnswerDTO";
 
 export class Textarea extends GreenhouseBaseInput {
   static XPATH = xpaths.TEXTAREA
@@ -22,7 +21,7 @@ export class Textarea extends GreenhouseBaseInput {
     return this.inputElement()?.value
   }
 
-  async fill(answers: AnswerDTO<string>[]): Promise<void> {
+  async fill(answers: StringAnswerDTO[]): Promise<void> {
     if (!this.inputElement()) {
       return
     }

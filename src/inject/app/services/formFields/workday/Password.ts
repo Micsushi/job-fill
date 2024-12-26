@@ -2,7 +2,7 @@ import { getElement } from "@src/shared/utils/getElements"
 import { fillReactTextInput } from "../utils"
 import { WorkdayBaseInput } from "./WorkdayBaseInput"
 import { xpaths } from "./xpaths"
-import AnswerDTO from "../../DTOs/AnswerDTO"
+import StringAnswerDTO from "../../DTOs/StringAnswerDTO"
 
 export class Password extends WorkdayBaseInput {
   static XPATH = xpaths.PASSWORD_INPUT
@@ -17,7 +17,7 @@ export class Password extends WorkdayBaseInput {
   }
 
   listenForChanges() {
-    this.inputElement.addEventListener('input', (e) => {
+    this.inputElement.addEventListener('input', () => {
       this.triggerReactUpdate()
     })
   }
@@ -26,7 +26,7 @@ export class Password extends WorkdayBaseInput {
     return current === stored[0]
   }
 
-  async fill(answers: AnswerDTO<string>[]) {
+  async fill(answers: StringAnswerDTO[]) {
     fillReactTextInput(this.inputElement, answers[0].answer)
   }
 }

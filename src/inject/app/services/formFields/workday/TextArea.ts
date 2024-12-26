@@ -3,7 +3,7 @@ import { getElement } from '@src/shared/utils/getElements'
 import { fillReactTextInput } from '../utils'
 import { WorkdayBaseInput } from './WorkdayBaseInput'
 import { xpaths } from './xpaths'
-import AnswerDTO from '../../DTOs/AnswerDTO'
+import StringAnswerDTO from '../../DTOs/StringAnswerDTO'
 
 export class TextArea extends WorkdayBaseInput {
   static XPATH = xpaths.TEXT_AREA
@@ -26,7 +26,7 @@ export class TextArea extends WorkdayBaseInput {
     return current === stored[0]
   }
 
-  async fill(answers: AnswerDTO<string>[]): Promise<void> {
+  async fill(answers: StringAnswerDTO[]): Promise<void> {
     await fieldFillerQueue.enqueue(async () => {
       fillReactTextInput(this.inputElement, answers[0].answer, {
         eventName: 'onBlur',

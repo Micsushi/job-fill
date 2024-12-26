@@ -1,11 +1,8 @@
-import { AnswerValueBackupStrings } from '../../../MoreInfoPopup/AnswerDisplay/AnswerValueDisplay/AnswerValueBackupStrings'
 import fieldFillerQueue from '@src/shared/utils/fieldFillerQueue'
 import { getElement, getElements } from '@src/shared/utils/getElements'
 import { GreenhouseBaseInput } from './GreenhouseBaseInput'
 import { xpaths } from './xpaths'
-import { answerValueInitList } from '../../../hooks/answerValueInit'
-import { EditableAnswer } from '../../../hooks/useEditableAnswerState'
-import AnswerDTO from '../../DTOs/AnswerDTO'
+import StringAnswerDTO from '../../DTOs/StringAnswerDTO'
 
 /**
  * Note: "Two or More Races opens a text box, add support eventually"
@@ -58,13 +55,14 @@ export class Checkboxes extends GreenhouseBaseInput {
     return this.selectedElement?.innerText || ''
   }
 
-  async fill(answers: AnswerDTO<string>[]): Promise<void> {
+  async fill(answers: StringAnswerDTO[]): Promise<void> {
     await fieldFillerQueue.enqueue(async () => {
       for (const answer of answers) {
+        const answerValue = answer.answer
         const correctAnswerElement = getElements(
           this.element,
           `.//label`
-        ).find((el) => el.innerText.trim() === answer.answer.trim())
+        ).find((el) => el.innerText.trim() === answerValue.trim())
         if (correctAnswerElement) {
           correctAnswerElement.click()
           break
