@@ -4,7 +4,7 @@ import { getElement } from '@src/shared/utils/getElements'
 import { dateCompare } from '../utils/dateUtils'
 import { GreenhouseBaseInput } from './GreenhouseBaseInput'
 import { xpaths } from './xpaths'
-import { AnswerDataTypes } from '../../DTOs/types'
+import { AnswerDataTypes_MonthYear } from '../../DTOs/types'
 import AnswerDTO from '../../DTOs/AnswerDTO'
 
 export class MonthYear extends GreenhouseBaseInput {
@@ -23,7 +23,7 @@ export class MonthYear extends GreenhouseBaseInput {
   }
 
   listenForChanges(): void {
-    this.inputWrapper.addEventListener('input', (e) => {
+    this.inputWrapper.addEventListener('input', () => {
       this.triggerReactUpdate()
     })
   }
@@ -57,10 +57,10 @@ export class MonthYear extends GreenhouseBaseInput {
     return dateCompare(stored[0], current)
   }
 
-  async fill(answers: AnswerDTO<AnswerDataTypes.MonthYear>[]): Promise<void> {
+  async fill(answers: AnswerDTO[]): Promise<void> {
 
     await fieldFillerQueue.enqueue(async () => {
-      const [month, year] = answers[0].answer
+      const [month, year] = answers[0].answer as AnswerDataTypes_MonthYear
       this.monthInputElement.value = month
       this.monthInputElement.dispatchEvent(new InputEvent('input'))
       this.yearInputElement.value = year
