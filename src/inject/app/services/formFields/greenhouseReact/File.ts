@@ -9,10 +9,15 @@ import { GreenhouseReactBaseInput } from './GreenhouseReactBaseInput';
 import { xpaths } from './xpaths';
 import { saveButtonClickHandlers } from '../../../hooks/saveButtonClickHandlers';
 import { SingleFileAnswerDTO } from '../../DTOs/SingleFileAnswerDTO';
+import AddNewFile from '@src/inject/app/MoreInfoPopup/Answers/AddNew/AddNewFile';
 
 export class File extends GreenhouseReactBaseInput {
   static XPATH = xpaths.FILE;
   fieldType = 'SingleFileUpload';
+  answerDTOClass = SingleFileAnswerDTO;
+  public customUIComponents = {
+    addNewAnswerComponent: AddNewFile,
+  };
   public saveButtonClickHandler = saveButtonClickHandlers.withNotice;
   fieldNotice = `##### To save and autofill files, upload them in the 'Answers' section below.
     \n\n[See how](https://www.youtube.com/watch?v=JYMATq9siIY&t=134s)`;
