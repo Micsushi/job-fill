@@ -6,7 +6,7 @@ import {
 } from '@src/shared/utils/getElements'
 import { GreenhouseBaseInput } from './GreenhouseBaseInput'
 import { xpaths } from './xpaths'
-import AnswerDTO from '../../DTOs/AnswerDTO'
+import StringAnswerDTO from '../../DTOs/StringAnswerDTO'
 
 export class DropdownSearchable extends GreenhouseBaseInput {
   static XPATH = xpaths.DROPDOWN_SEARCHABLE
@@ -68,7 +68,7 @@ export class DropdownSearchable extends GreenhouseBaseInput {
   }
 
   listenForChanges(): void {
-    const observer = new MutationObserver((mutationsList) => {
+    const observer = new MutationObserver(() => {
       this.triggerReactUpdate()
     })
 
@@ -82,7 +82,7 @@ export class DropdownSearchable extends GreenhouseBaseInput {
     return this.select2ContainerAElement?.innerText
   }
 
-  async fill(answers: AnswerDTO[]): Promise<void> {
+  async fill(answers: StringAnswerDTO[]): Promise<void> {
     await fieldFillerQueue.enqueue(async () => {
       for (const answer of answers) {
         const answerValue = answer.answer
