@@ -5,6 +5,7 @@ export { default as DeleteIcon } from '@mui/icons-material/Delete'
 export { default as EditIcon } from '@mui/icons-material/Edit'
 export { default as ClearIcon } from '@mui/icons-material/Clear'
 export { default as CheckCircleIcon } from '@mui/icons-material/CheckCircle'
+export { default as CheckIcon } from '@mui/icons-material/Check';
 export { default as InfoIcon } from '@mui/icons-material/Info'
 export { default as MoreVertIcon } from '@mui/icons-material/MoreVert'
 export { default as CloseIcon } from '@mui/icons-material/Close'
