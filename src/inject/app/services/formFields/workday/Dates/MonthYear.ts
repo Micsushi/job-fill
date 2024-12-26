@@ -6,7 +6,7 @@ import { AnswerValueSingleDate } from '../../../../MoreInfoPopup/AnswerDisplay/A
 import { setupChangeListener, fillDatePart } from './utils'
 import { dateCompare } from '../../utils/dateUtils'
 import AnswerDTO from '../../../DTOs/AnswerDTO'
-import { AnswerDataTypes } from '../../../DTOs/types'
+import { AnswerDataTypes_MonthYear } from '../../../DTOs/types'
 
 export class MonthYear extends WorkdayBaseInput {
   static XPATH = xpaths.MONTH_YEAR
@@ -56,9 +56,9 @@ export class MonthYear extends WorkdayBaseInput {
     return dateCompare(stored[0], current)
   }
 
-  async fill(answers: AnswerDTO<AnswerDataTypes.MonthYear>[]): Promise<void> {
+  async fill(answers: AnswerDTO[]): Promise<void> {
     await fieldFillerQueue.enqueue(async () => {
-      const [month, year] = answers[0].answer
+      const [month, year] = answers[0].answer as AnswerDataTypes_MonthYear
       await fillDatePart(this.monthInputElement, month)
       await fillDatePart(this.yearInputElement, year)
     })
