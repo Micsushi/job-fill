@@ -19,7 +19,6 @@ import {
 } from '../../../../hooks/answerValueInit';
 import { saveButtonClickHandlers } from '../../../../hooks/saveButtonClickHandlers';
 import AnswerDTO from '../../../DTOs/AnswerDTO';
-import { AnswerDataTypes } from '../../../DTOs/types';
 
 export class MonthDayYear extends WorkdayBaseInput {
   static XPATH = xpaths.MONTH_DAY_YEAR;
@@ -97,9 +96,7 @@ export class MonthDayYear extends WorkdayBaseInput {
     return dateCompare(absDate, current);
   }
 
-  async fill(
-    answers: AnswerDTO<AnswerDataTypes.MonthDayYear>[]
-  ): Promise<void> {
+  async fill(answers: AnswerDTO[]): Promise<void> {
     await fieldFillerQueue.enqueue(async () => {
       const [month, day, year] = convertRelativeDate(
         answers[0].answer as unknown as AnswerValueRelativeDate
