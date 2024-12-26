@@ -1,24 +1,24 @@
-import fieldFillerQueue from '@src/shared/utils/fieldFillerQueue'
-import { getElement } from '@src/shared/utils/getElements'
-import { WorkdayBaseInput } from './WorkdayBaseInput'
-import stringMatch from '@src/shared/utils/stringMatch'
-import { lowerText } from '@src/shared/utils/xpath'
-import { xpaths } from './xpaths'
-import AnswerDTO from '../../DTOs/AnswerDTO'
+import fieldFillerQueue from '@src/shared/utils/fieldFillerQueue';
+import { getElement } from '@src/shared/utils/getElements';
+import { WorkdayBaseInput } from './WorkdayBaseInput';
+import stringMatch from '@src/shared/utils/stringMatch';
+import { lowerText } from '@src/shared/utils/xpath';
+import { xpaths } from './xpaths';
+import AnswerDTO from '../../DTOs/AnswerDTO';
 
 export class BooleanRadio extends WorkdayBaseInput {
-  static XPATH = xpaths.BOOLEAN_RADIO
-  fieldType = 'BooleanRadio'
+  static XPATH = xpaths.BOOLEAN_RADIO;
+  fieldType = 'BooleanRadio';
 
   listenForChanges(): void {
-    const radioGroupElement = getElement(this.element, './/fieldset')
-    radioGroupElement.addEventListener('change', (e) => {
-      this.triggerReactUpdate()
-    })
+    const radioGroupElement = getElement(this.element, './/fieldset');
+    radioGroupElement.addEventListener('change', () => {
+      this.triggerReactUpdate();
+    });
   }
 
   get fieldName(): string {
-    const fieldNames = ['previousWorker']
+    const fieldNames = ['previousWorker'];
     for (const name in fieldNames) {
       if (
         getElement(
@@ -26,10 +26,10 @@ export class BooleanRadio extends WorkdayBaseInput {
           `.//div[@data-automation-id='${fieldNames[name]}']`
         )
       ) {
-        return fieldNames[name]
+        return fieldNames[name];
       }
     }
-    return getElement(this.element, './/legend').innerText
+    return getElement(this.element, './/legend').innerText;
   }
 
   get checkedRadioElement(): HTMLElement {
@@ -37,31 +37,32 @@ export class BooleanRadio extends WorkdayBaseInput {
       ".//input[@type='radio'][@aria-checked='true']",
       '/ancestor::div',
       '[label]',
-    ].join('')
-    const el = getElement(this.element, XPATH)
-    return el
+    ].join('');
+    const el = getElement(this.element, XPATH);
+    return el;
   }
 
   /**
    * exact match (case insensetive)
    */
   public isFilled(current: any, stored: any[]): boolean {
-    return stored.some(answer => stringMatch.exact(current, answer));
+    return stored.some((answer) => stringMatch.exact(current, answer));
   }
 
   currentValue() {
-    return this.checkedRadioElement?.textContent
+    return this.checkedRadioElement?.textContent;
   }
 
-  async fill(answers: AnswerDTO<string>[]): Promise<void> {
+  async fill(answers: AnswerDTO[]): Promise<void> {
     await fieldFillerQueue.enqueue(async () => {
+      const answerValue = answers[0].answer as string;
       const XPATH = [
         '//div',
-        `[label[${lowerText()}='${answers[0].answer.toLowerCase()}']]`,
+        `[label[${lowerText()}='${answerValue.toLowerCase()}']]`,
         "//input[@type='radio']",
-      ].join('')
-      const checkElement = getElement(this.element, XPATH)
-      checkElement?.click()
-    })
+      ].join('');
+      const checkElement = getElement(this.element, XPATH);
+      checkElement?.click();
+    });
   }
 }
