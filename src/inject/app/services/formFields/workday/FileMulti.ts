@@ -16,7 +16,7 @@ import { getReactProps } from '../utils'
 import { xpaths } from './xpaths'
 import { saveButtonClickHandlers } from '../../../hooks/saveButtonClickHandlers'
 import AnswerDTO from '../../DTOs/AnswerDTO'
-import { AnswerDataTypes } from '../../DTOs/types'
+import { AnswerDataTypes_File } from '../../DTOs/types'
 
 export class FileMulti extends WorkdayBaseInput {
   fieldType = 'MultiFileUpload'
@@ -100,10 +100,10 @@ export class FileMulti extends WorkdayBaseInput {
     return isEqual(current, firstAnswerFileNames)
   }
 
-  async fill(answers: AnswerDTO<AnswerDataTypes.File[]>[]): Promise<void> {
+  async fill(answers: AnswerDTO[]): Promise<void> {
     await fieldFillerQueue.enqueue(async () => {
       const firstAnswer = answers[0]
-      const files = firstAnswer.answer.map(localStorageToFile)
+      const files = (firstAnswer.answer as AnswerDataTypes_File[]).map(localStorageToFile)
       for (const button of this.uploadedFileDeleteButtonElements) {
         button.click()
       }
