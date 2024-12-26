@@ -12,7 +12,7 @@ export abstract class GreenhouseBaseInput extends BaseFormInput {
       if (isRegistered(el) || !isVisible(el)) {
         return
       }
-        // @ts-ignore
+        // @ts-expect-error this works
         new this(el)
     })
   }
@@ -40,7 +40,7 @@ export abstract class GreenhouseBaseInput extends BaseFormInput {
   /**
    * Attach widget between label and field
    */
-  attachReactApp(app: React.ReactNode, inputContainer: HTMLElement) {
+  attachReactApp(app: React.ReactNode ) {
     const rootElement = document.createElement('div')
     rootElement.classList.add("jaf-widget")
     if (this.inputDisplayElement) {
