@@ -41,6 +41,7 @@ export function downloadFile(file: File) {
   const fileURL = URL.createObjectURL(file);
   const a = document.createElement('a');
   a.href = fileURL;
+  a.id = 'jaf-temp-download-link'; // used in usePopperState to check if the click was on the download link
   a.download = file.name;
   document.body.appendChild(a);
   a.click();
