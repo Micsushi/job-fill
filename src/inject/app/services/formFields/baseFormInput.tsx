@@ -13,6 +13,7 @@ import {
 import { EditableAnswer } from '../../hooks/useEditableAnswerState';
 import contentScriptAPI from '../contentScriptApi';
 import AnswerDTO from '../DTOs/AnswerDTO';
+import { AnswerDataTypes_Any } from '../DTOs/types';
 
 export type AnswerValueMethods = {
   displayComponent: FC<{ id: number }>;
@@ -31,8 +32,8 @@ export function isVisible(el: HTMLElement): boolean {
 
 
 export type AddNewAnswerComponentProps = {
-  newAnswer: unknown;
-  setNewAnswer: (_: unknown) => void;
+  newAnswer: AnswerDataTypes_Any;
+  setNewAnswer: (_: AnswerDataTypes_Any) => void;
 }
 export type CustomUIComponents = {
   addNewAnswerComponent?: React.FC<AddNewAnswerComponentProps>;

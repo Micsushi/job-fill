@@ -30,8 +30,6 @@ const AddNewFile: FC<AddNewAnswerComponentProps> = ({
   };
 
   const deleteAnswerValue = () => {
-    console.log('deleteAnswerValue');
-
     setNewAnswer(null);
   };
 

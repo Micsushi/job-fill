@@ -19,10 +19,14 @@ import {
 } from '../../../../hooks/answerValueInit';
 import { saveButtonClickHandlers } from '../../../../hooks/saveButtonClickHandlers';
 import AnswerDTO from '../../../DTOs/AnswerDTO';
+import AddNewDate from '@src/inject/app/MoreInfoPopup/Answers/AddNew/AddNewDate';
 
 export class MonthDayYear extends WorkdayBaseInput {
   static XPATH = xpaths.MONTH_DAY_YEAR;
   fieldType = 'MonthDayYear';
+  public customUIComponents = {
+    addNewAnswerComponent: AddNewDate
+  }
   public saveButtonClickHandler = saveButtonClickHandlers.withNotice;
   fieldNotice = `##### Choose a relative or absolute date. 
   [See how](https://www.youtube.com/watch?v=JYMATq9siIY&t=207s)`;
@@ -92,11 +96,13 @@ export class MonthDayYear extends WorkdayBaseInput {
     if (stored.length <= 0) {
       return false;
     }
-    const absDate = convertRelativeDate(stored[0]);
-    return dateCompare(absDate, current);
+    // const absDate = convertRelativeDate(stored[0]);
+    // return dateCompare(absDate, current);
   }
 
   async fill(answers: AnswerDTO[]): Promise<void> {
+    console.log(answers);
+    
     await fieldFillerQueue.enqueue(async () => {
       const [month, day, year] = convertRelativeDate(
         answers[0].answer as unknown as AnswerValueRelativeDate

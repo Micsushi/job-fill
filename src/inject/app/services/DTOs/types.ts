@@ -1,6 +1,17 @@
 export type AnswerDataTypes_RelativeDate = string;
-export type AnswerDataTypes_MonthDayYear = [string, string, string] | AnswerDataTypes_RelativeDate;
 export type AnswerDataTypes_MonthYear = [string, string];
+type AbsoluteDate = [string, string, string];
+type RelativeDate = 'today';
+export type AnswerDataTypes_MonthDayYear =
+  | {
+      relative: true;
+      value: RelativeDate;
+    }
+  | {
+      relative: false;
+      value: AbsoluteDate;
+    };
+
 export type AnswerDataTypes_File = {
   body: string;
   lastModified: number;
@@ -17,5 +28,3 @@ export type AnswerDataTypes_Any =
   | string[]
   | boolean
   | number;
-
-
