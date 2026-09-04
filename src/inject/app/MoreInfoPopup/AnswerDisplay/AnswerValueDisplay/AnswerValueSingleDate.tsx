@@ -44,8 +44,6 @@ export const AnswerValueSingleDate: FC<{ id: number }> = ({ id }) => {
 
   return (
     <>
-      <Divider sx={{ mb: 1 }} />
-      <Typography>Value:</Typography>
       {editable ? (
         <Collapse in={editable}>
           {joinComponents(

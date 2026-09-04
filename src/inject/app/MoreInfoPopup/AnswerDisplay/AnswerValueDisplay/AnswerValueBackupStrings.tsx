@@ -61,7 +61,6 @@ export const AnswerValueBackupStrings: FC<{ id: number }> = ({ id }) => {
   
   return (
     <>
-      <Divider sx={{ mb: 1 }} />
       <Typography>Values:</Typography>
       <Grid container direction={'column'} spacing={1}>
         {editedAnswer.value.map(([answer, valueEditable], answerValueId) => {

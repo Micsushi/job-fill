@@ -48,8 +48,6 @@ export const AnswerValueMultiFileUpload: FC<{ id: number }> = ({ id }) => {
 
   return (
     <>
-      <Divider sx={{ mb: 1 }} />
-      <Typography>Files:</Typography>
       <Grid container direction={'column'} spacing={1}>
         {editedAnswer.value.map(
           (file: LocalStorageFile, answerValueId: number) => {

@@ -43,8 +43,6 @@ export const AnswerValueSingleFileUpload: FC<{ id: number }> = ({ id }) => {
 
   return (
     <>
-      <Divider sx={{ mb: 1 }} />
-      <Typography>Files:</Typography>
       <Box>
         {editedAnswer.value ? (
           <>
