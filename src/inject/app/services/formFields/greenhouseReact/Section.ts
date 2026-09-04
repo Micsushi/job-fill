@@ -1,66 +1,64 @@
-import { getElement, getElements } from '@src/shared/utils/getElements'
+import { getElements } from '@src/shared/utils/getElements'
 
-const SECTION_CONFIGS = [
-  { prefix: 'education', xpath: './/div[contains(@class, "education--form")]' },
-  { prefix: 'employment', xpath: './/div[contains(@class, "employment--form")]' },
-  { prefix: 'experience', xpath: './/div[contains(@class, "experience--form")]' },
-]
+/**
+ * A repeating group is a container holding an "Add another" button. Greenhouse
+ * names them consistently: `education--container` wraps N `education--form`
+ * entries, and the controls inside carry a `--0`, `--1` id suffix.
+ *
+ * Detecting the container by its button rather than by a list of known class
+ * names means employment, experience and any other repeating group a board
+ * renders are picked up without having to guess what they're called.
+ */
+const SECTION_XPATH =
+  './/div[./button[contains(@class, "add-another-button")]]'
 
-const SECTION_XPATH = SECTION_CONFIGS.map((c) => c.xpath).join(' | ')
+/** `education--container` -> `education`. */
+const groupName = (container: HTMLElement): string => {
+  const match = Array.from(container.classList)
+    .map((c) => /^(.+)--container$/.exec(c))
+    .find(Boolean)
+  return match ? match[1] : 'section'
+}
 
+const isEntry = (el: Element): el is HTMLElement => {
+  return (
+    el instanceof HTMLElement &&
+    el.tagName !== 'BUTTON' &&
+    Boolean(el.querySelector('input, textarea, select'))
+  )
+}
+
+/**
+ * Number every entry in every repeating group. Runs on each pass rather than
+ * only when a section is added, so removing the middle entry of three
+ * renumbers the rest instead of leaving a gap.
+ */
 const assignNumbersToSections = () => {
-  SECTION_CONFIGS.forEach(({ prefix, xpath }) => {
-    const sectionElements = getElements(document, xpath)
-    sectionElements.forEach((element, index) => {
-      element.setAttribute('jaf-section', `${prefix} ${(index + 1).toString()}`)
-    })
+  getElements(document, SECTION_XPATH).forEach((container) => {
+    const prefix = groupName(container)
+    Array.from(container.children)
+      .filter(isEntry)
+      .forEach((entry, index) => {
+        entry.setAttribute('jaf-section', `${prefix} ${index + 1}`)
+      })
   })
 }
 
 /**
- * not a formfield
- * registers repeating sections and gives them a number
+ * Not a form field. Tags repeating sections so answers saved against
+ * "education 2" only ever fill the second education entry, and an entry with
+ * no saved answers is left alone.
  */
 export class Section {
   static XPATH = SECTION_XPATH
   element: HTMLElement
 
-  static async autoDiscover(node: Node = document) {
-    const elements = getElements(node, this.XPATH)
-    elements.forEach((el) => {
-      if (!el.hasAttribute('jaf-section')) {
-        // @ts-ignore
-        new this(el)
-      }
-    })
+  static async autoDiscover(_node: Node = document) {
     assignNumbersToSections()
   }
 
   constructor(element: HTMLElement) {
     this.element = element
     assignNumbersToSections()
-    this.reassignNumberOnRemoval()
-  }
-
-  reassignNumberOnRemoval(): void {
-    const observer = new MutationObserver((mutations: MutationRecord[]) => {
-      for (const m of mutations) {
-        for (const node of Array.from(m.removedNodes)) {
-          if (
-            node instanceof HTMLElement &&
-            (node.classList?.contains('education--form') ||
-              node.classList?.contains('employment--form') ||
-              node.classList?.contains('experience--form'))
-          ) {
-            assignNumbersToSections()
-            observer.disconnect()
-            return
-          }
-        }
-      }
-    })
-    if (this.element.parentElement) {
-      observer.observe(this.element.parentElement, { childList: true })
-    }
   }
 }
