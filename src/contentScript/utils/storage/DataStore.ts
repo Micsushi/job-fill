@@ -13,7 +13,10 @@ export const convert106To1010 = (
   // posting-specific: the same value saved on a second job would be stored
   // again instead of matching, and the store would grow without bound.
   const { page, ...path } = answer106.path || ({} as any)
-  const answer1010 = { answer: answer106.answer, ...path }
+  const answer1010: any = { answer: answer106.answer, ...path }
+  if (answer106.confirmWithEnter !== undefined) {
+    answer1010.confirmWithEnter = answer106.confirmWithEnter
+  }
   const { matchType, id } = answer106
   if (id !== undefined) {
     ;(answer1010 as SavedAnswer).id = id
@@ -27,15 +30,37 @@ export const convert106To1010 = (
 export const convert1010To106 = (
   answer1010: NewAnswer | SavedAnswer
 ): Answer => {
-  const { section, fieldType, fieldName, answer, id, matchType } =
+  const { section, fieldType, fieldName, answer, id, matchType, confirmWithEnter } =
     answer1010 as SavedAnswer
-  return { answer, id, matchType, path: { section, fieldName, fieldType } }
+  return {
+    answer,
+    id,
+    matchType,
+    confirmWithEnter,
+    path: { section, fieldName, fieldType },
+  }
 }
 
 /**
  * Bump when a new one-off repair is added, so it runs once for existing users.
  */
 const MAINTENANCE_VERSION = 1
+
+/**
+ * How many actions can be taken back. Entries hold only the records an action
+ * touched, not a copy of the whole store, so a long history stays cheap --
+ * except for file answers, which are base64 and are kept in memory only.
+ */
+const MAX_HISTORY = 20
+const MAX_PERSISTED_ENTRY_BYTES = 100_000
+
+export type HistoryEntry = {
+  label: string
+  /** Records as they were. Restored on undo. */
+  before: SavedAnswer[]
+  /** Records as they are now. Restored on redo. */
+  after: SavedAnswer[]
+}
 
 const tsIndex = () => {
   const index = elasticlunr<{ fieldName: string; id: number }>()
@@ -259,6 +284,10 @@ export class DataStore {
   }>
 
   listenerAttached: boolean
+  /** Set while a compound action records a single entry of its own. */
+  private suspendHistory = false
+  private past: HistoryEntry[] = []
+  private future: HistoryEntry[] = []
 
   constructor(name: string) {
     this.name = name
@@ -292,10 +321,13 @@ export class DataStore {
     if (existingMatch) {
       return existingMatch
     }
-    const savedAnswer = { ...item, id }
+    const savedAnswer = { ...item, id } as SavedAnswer
     this.store.set(id, savedAnswer) // Store the item with the new ID
     this.exactMatchIndex.add(item.fieldName, id)
     this.ts_index.addDoc({ fieldName: item.fieldName, id })
+    if (!this.suspendHistory) {
+      this.record(`Save "${item.fieldName}"`, [], [savedAnswer])
+    }
     this.persist() // Persist the data to chrome.storage.local
     return savedAnswer // Return the assigned ID
   }
@@ -315,6 +347,9 @@ export class DataStore {
       this.exactMatchIndex.delete(record.fieldName, id)
       this.ts_index.removeDoc({ fieldName: record.fieldName, id })
       this.store.delete(id)
+      if (!this.suspendHistory) {
+        this.record(`Delete "${record.fieldName}"`, [record], [])
+      }
       this.persist()
       return true
     }
@@ -326,10 +361,17 @@ export class DataStore {
       throw new Error('load it first')
     }
     const old = this.get(item.id)
+    // delete() and add() each record their own entry; an edit is one action.
+    const outer = this.suspendHistory
+    this.suspendHistory = true
     if (old) {
       this.delete(old.id)
     }
     this.add(item, item.id)
+    this.suspendHistory = outer
+    if (!this.suspendHistory) {
+      this.record(`Edit "${item.fieldName}"`, old ? [old] : [], [item])
+    }
     return item
   }
 
@@ -438,6 +480,7 @@ export class DataStore {
       this.listenerAttached = true
     }
 
+    await this.loadHistory()
     await this.runMaintenanceIfNeeded()
   }
 
@@ -518,6 +561,9 @@ export class DataStore {
 
     let added = 0
     let updated = 0
+    const importBefore = this.getAll().map((r) => structuredClone(r))
+    const outerSuspend = this.suspendHistory
+    this.suspendHistory = true
 
     for (const raw of recordsToImport) {
       const record = sanitizeImportedRecord(raw)
@@ -534,6 +580,15 @@ export class DataStore {
 
     if (mode === 'replace') {
       this.autoIncrement = Math.max(this.autoIncrement, maxId)
+    }
+
+    this.suspendHistory = outerSuspend
+    if (!this.suspendHistory) {
+      this.record(
+        `Import ${added + updated} answer(s)`,
+        importBefore,
+        this.getAll().map((r) => structuredClone(r))
+      )
     }
 
     await this.persist()
@@ -588,19 +643,141 @@ export class DataStore {
     }
 
     // Remove directly rather than through delete(), which persists each time.
+    const removed: SavedAnswer[] = []
     duplicates.forEach((id) => {
       const record = this.store.get(id)
       if (!record) return
+      removed.push(structuredClone(record))
       this.exactMatchIndex.delete(record.fieldName, id)
       this.ts_index.removeDoc({ fieldName: record.fieldName, id })
       this.store.delete(id)
     })
+
+    if (removed.length && !this.suspendHistory) {
+      this.record(`Remove ${removed.length} duplicate(s)`, removed, [])
+    }
 
     await this.persist()
     return {
       duplicatesRemoved: duplicates.length,
       recordsRepaired,
       total: this.store.size,
+    }
+  }
+
+
+  // ---------------------------------------------------------------- history
+
+  /**
+   * Record an action so it can be taken back.
+   *
+   * Stores the affected records either side of the change rather than a
+   * snapshot of everything, so undo stays cheap on a large store.
+   */
+  private record(label: string, before: SavedAnswer[], after: SavedAnswer[]) {
+    this.past.push({
+      label,
+      before: structuredClone(before),
+      after: structuredClone(after),
+    })
+    if (this.past.length > MAX_HISTORY) this.past.shift()
+    // A new action invalidates anything that was undone.
+    this.future = []
+    this.persistHistory()
+  }
+
+  private putRecord(record: SavedAnswer) {
+    this.store.set(record.id, record)
+    this.exactMatchIndex.add(record.fieldName, record.id)
+    this.ts_index.addDoc({ fieldName: record.fieldName, id: record.id })
+    this.autoIncrement = Math.max(this.autoIncrement, record.id + 1)
+  }
+
+  private dropRecord(id: number) {
+    const record = this.store.get(id)
+    if (!record) return
+    this.exactMatchIndex.delete(record.fieldName, id)
+    this.ts_index.removeDoc({ fieldName: record.fieldName, id })
+    this.store.delete(id)
+  }
+
+  /** Remove what the action produced, put back what it replaced. */
+  private applyRecords(remove: SavedAnswer[], restore: SavedAnswer[]) {
+    const restored = new Set(restore.map((r) => r.id))
+    remove.forEach((r) => {
+      if (!restored.has(r.id)) this.dropRecord(r.id)
+    })
+    restore.forEach((r) => this.putRecord(structuredClone(r)))
+  }
+
+  canUndo(): boolean {
+    return this.past.length > 0
+  }
+
+  /** What undo would take back, for labelling the control. */
+  nextUndoLabel(): string | null {
+    return this.past.length ? this.past[this.past.length - 1].label : null
+  }
+
+  nextRedoLabel(): string | null {
+    return this.future.length ? this.future[this.future.length - 1].label : null
+  }
+
+  canRedo(): boolean {
+    return this.future.length > 0
+  }
+
+  /** Returns the label of what was undone, or null if there was nothing. */
+  async undo(): Promise<string | null> {
+    const entry = this.past.pop()
+    if (!entry) return null
+    this.applyRecords(entry.after, entry.before)
+    this.future.push(entry)
+    await this.persist()
+    await this.persistHistory()
+    return entry.label
+  }
+
+  async redo(): Promise<string | null> {
+    const entry = this.future.pop()
+    if (!entry) return null
+    this.applyRecords(entry.before, entry.after)
+    this.past.push(entry)
+    await this.persist()
+    await this.persistHistory()
+    return entry.label
+  }
+
+  /**
+   * History lives in storage so an action taken on a job page can be undone
+   * from the popup, which is a separate context with its own instance.
+   */
+  private async persistHistory(): Promise<void> {
+    try {
+      const trim = (entries: HistoryEntry[]) =>
+        entries.filter(
+          (e) => JSON.stringify(e).length <= MAX_PERSISTED_ENTRY_BYTES
+        )
+      await chrome.storage.local.set({
+        [`${this.name}_history`]: {
+          past: trim(this.past),
+          future: trim(this.future),
+        },
+      })
+    } catch {
+      // History is a convenience; never fail an action over it.
+    }
+  }
+
+  private async loadHistory(): Promise<void> {
+    try {
+      const key = `${this.name}_history`
+      const stored = await chrome.storage.local.get(key)
+      this.past = stored[key]?.past || []
+      this.future = stored[key]?.future || []
+    } catch {
+      this.past = []
+      this.future = []
     }
   }
 

@@ -1,23 +1,20 @@
-import {
-  Avatar,
-  Box,
-  Breadcrumbs,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  Stack,
-  Tooltip,
-  Typography,
-} from '@mui/material'
+import { Box, Button, Typography } from '@mui/material'
 import React, { FC } from 'react'
 
 import { useAppContext } from '../AppContext'
 import { MoreInfoHeader } from './MoreInfoHeader'
-import { FieldNotice, Item } from './components'
+import { FieldNotice } from './components'
 import { AnswersSection } from './AnswerSection'
 import { FieldInfo } from './FieldInfo'
+import { t } from './tokens'
 
+/**
+ * One surface, sections divided by hairlines.
+ *
+ * Nothing in here gets its own card. The previous version nested a Paper per
+ * answer inside a Paper per section inside the panel Card, which is what read
+ * as boxes stacking up behind the menu.
+ */
 const MoreInfoCardContainer: FC = () => {
   const {
     currentValue,
@@ -27,119 +24,98 @@ const MoreInfoCardContainer: FC = () => {
     editableAnswerState: { answers },
   } = useAppContext()
 
-  const stringifiedCurrentValue =
+  const currentText =
     currentValue !== null && currentValue !== undefined
       ? String(currentValue).trim()
       : ''
   const hasCurrentValue =
-    stringifiedCurrentValue.length > 0 &&
-    stringifiedCurrentValue !== 'null' &&
-    stringifiedCurrentValue !== 'undefined'
+    currentText.length > 0 &&
+    currentText !== 'null' &&
+    currentText !== 'undefined'
+
   const alreadySaved = answers.some((a) => {
-    const rawAnswer = a.originalAnswer?.answer
-    if (typeof rawAnswer === 'string') {
-      return (
-        rawAnswer.trim().toLowerCase() === stringifiedCurrentValue.toLowerCase()
-      )
+    const saved = a.originalAnswer?.answer
+    if (typeof saved === 'string') {
+      return saved.trim().toLowerCase() === currentText.toLowerCase()
     }
-    return JSON.stringify(rawAnswer) === JSON.stringify(currentValue)
+    return JSON.stringify(saved) === JSON.stringify(currentValue)
   })
-  const isNewValue = hasCurrentValue && !alreadySaved
 
   return (
-    <Card>
+    <Box
+      sx={{
+        width: 360,
+        maxWidth: '90vw',
+        backgroundColor: t.surface,
+        border: `1px solid ${t.border}`,
+        borderRadius: t.radius,
+        boxShadow: t.shadow,
+        overflow: 'hidden',
+      }}
+    >
       <MoreInfoHeader />
-      <CardContent sx={{ padding: 0, paddingBottom: '0px!important' }}>
-        <Box
-          padding={1}
-          sx={{
-            maxWidth: 'calc(45vw)',
-            maxHeight: 380,
-            overflow: 'scroll',
-          }}
-        >
-          <Stack spacing={2}>
-            {fieldNotice && (
-              <Item>
-                <FieldNotice>{fieldNotice}</FieldNotice>
-              </Item>
-            )}
 
-            {isNewValue && (
-              <Item>
-                <Box
-                  sx={{
-                    backgroundColor: '#e8f5e9',
-                    border: '1px solid #81c784',
-                    borderRadius: '8px',
-                    p: 1.5,
-                  }}
-                >
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      color: '#2e7d32',
-                      fontWeight: 700,
-                      display: 'block',
-                      mb: 0.5,
-                    }}
-                  >
-                    NEW VALUE ENTERED IN FIELD
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontWeight: 500,
-                      color: '#1b5e20',
-                      mb: 1.5,
-                      wordBreak: 'break-word',
-                      backgroundColor: '#ffffff',
-                      p: 1,
-                      borderRadius: '4px',
-                      border: '1px solid #c8e6c9',
-                    }}
-                  >
-                    {stringifiedCurrentValue}
-                  </Typography>
-                  <Button
-                    variant="contained"
-                    size="small"
-                    fullWidth
-                    onClick={async () => {
-                      await backend.save({
-                        path: backend.path,
-                        answer: currentValue,
-                      })
-                      await init()
-                    }}
-                    sx={{
-                      backgroundColor: '#2e7d32',
-                      '&:hover': { backgroundColor: '#1b5e20' },
-                      textTransform: 'none',
-                      fontWeight: 600,
-                      fontSize: '12px',
-                    }}
-                  >
-                    + Add as another answer option
-                  </Button>
-                </Box>
-              </Item>
-            )}
+      <Box sx={{ maxHeight: 400, overflowY: 'auto' }}>
+        {fieldNotice && (
+          <Box sx={{ px: 1.5, pt: 1.25 }}>
+            <FieldNotice>{fieldNotice}</FieldNotice>
+          </Box>
+        )}
 
-            <Item>
-              <AnswersSection />
-            </Item>
-            <Item>
-              <Typography variant="h6">Current Value</Typography>
-              <Typography>{String(currentValue)}</Typography>
-            </Item>
-            <Item>
-              <FieldInfo />
-            </Item>
-          </Stack>
+        {/* What is in the field right now, and the one action it affords. */}
+        <Box sx={{ px: 1.5, py: 1.25 }}>
+          <Typography
+            sx={{ font: t.fontMeta, fontWeight: 700, color: t.textMuted }}
+          >
+            In the field now
+          </Typography>
+          <Typography
+            sx={{
+              font: t.font,
+              color: hasCurrentValue ? t.text : t.textMuted,
+              mt: 0.25,
+              wordBreak: 'break-word',
+            }}
+          >
+            {hasCurrentValue ? currentText : 'Empty'}
+          </Typography>
+
+          {hasCurrentValue && !alreadySaved && (
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={async () => {
+                await backend.save({
+                  path: backend.path,
+                  answer: currentValue,
+                })
+                await init()
+              }}
+              sx={{
+                font: t.fontMeta,
+                fontWeight: 600,
+                textTransform: 'none',
+                mt: 0.75,
+                py: 0.25,
+                color: t.accent,
+                borderColor: t.border,
+                '&:hover': { borderColor: t.accent, backgroundColor: t.accentSoft },
+              }}
+            >
+              Save this as an answer
+            </Button>
+          )}
         </Box>
-      </CardContent>
-    </Card>
+
+        <Box sx={{ borderTop: `1px solid ${t.hairline}` }}>
+          <AnswersSection />
+        </Box>
+
+        <Box sx={{ borderTop: `1px solid ${t.hairline}` }}>
+          <FieldInfo />
+        </Box>
+      </Box>
+    </Box>
   )
 }
 

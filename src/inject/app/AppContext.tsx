@@ -9,6 +9,7 @@ import React, {
   useState,
 } from 'react'
 import { BaseFormInput } from './services/formFields/baseFormInput'
+import { Answer } from '@src/shared/utils/types'
 import { EditableAnswerState } from './hooks/useEditableAnswerState'
 import { PopperState, usePopperState } from './hooks/usePopperState'
 import { contentScriptAPI } from './services/contentScriptApi'
@@ -136,8 +137,27 @@ export const ContextProvider: FC<{
     return String(value)
   }
 
+  /**
+   * Saving an empty field is almost always a misclick, and the resulting
+   * blank answer then competes with the real one at fill time.
+   */
+  const isEmptyAnswer = (value: any): boolean => {
+    if (value === null || value === undefined) return true
+    if (typeof value === 'string') return value.trim() === ''
+    if (Array.isArray(value)) return value.length === 0
+    return false
+  }
+
+  const confirmedNotEmpty = (snapshot: Answer | null): boolean => {
+    if (!snapshot || !isEmptyAnswer(snapshot.answer)) return true
+    return window.confirm(
+      `"${backend.fieldName}" is empty. Save it as a blank answer anyway?`
+    )
+  }
+
   const handleSaveAsExtra = async () => {
     const snapshot = await backend.fieldSnapshotForSave()
+    if (!confirmedNotEmpty(snapshot)) return
     saveButtonClickHandler(snapshot, {
       moreInfoPopper,
       init,
@@ -156,6 +176,7 @@ export const ContextProvider: FC<{
       moreInfoPopper.open()
       return
     }
+    if (!confirmedNotEmpty(snapshot)) return
     const existing = editableAnswerState.answers
     const confirmed = window.confirm(
       [

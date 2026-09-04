@@ -1,22 +1,17 @@
-import {
-  Avatar,
-  Box,
-  Breadcrumbs,
-  Button,
-  Chip,
-  Grid,
-  IconButton,
-  Paper,
-  TextField,
-  Tooltip,
-  Typography,
-} from '@mui/material'
-import React, { FC, useRef } from 'react'
-import { ConfirmButton } from '../../components/ConfirmButton'
+import { Box, Button, IconButton, TextField, Typography } from '@mui/material'
+import React, { FC, useRef, useState } from 'react'
 import { useAppContext } from '../../AppContext'
 import { SimplePopper } from '../../components/SimplePopper'
-import { DeleteIcon, EditIcon, CloseIcon } from '@src/shared/utils/icons'
+import { DeleteIcon, EditIcon } from '@src/shared/utils/icons'
 import { sentenceCase } from '@src/shared/utils/strings'
+import { contentScriptAPI } from '../../services/contentScriptApi'
+import { t } from '../tokens'
+
+const iconButtonSx = {
+  color: t.textMuted,
+  p: 0.5,
+  '&:hover': { color: t.text },
+}
 
 export const AnswerDisplayComponent: FC<{ id: number }> = ({ id }) => {
   const {
@@ -29,117 +24,184 @@ export const AnswerDisplayComponent: FC<{ id: number }> = ({ id }) => {
       answers,
     },
     backend,
+    init,
   } = useAppContext()
 
-  const { editedAnswer, originalAnswer, editable, error, isNew } = answers.find(
-    (a) => a.id === id
-  )
-  
+  const entry = answers.find((a) => a.id === id)
+  // Deleting removes the row while its own handler is still on the stack.
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
   const errorPopperRef = useRef(null)
 
+  if (!entry) return null
+  const { editedAnswer, originalAnswer, editable, error, isNew } = entry
+
+  const toggleConfirmWithEnter = async () => {
+    await contentScriptAPI.send('updateAnswer', {
+      ...originalAnswer,
+      confirmWithEnter: !originalAnswer.confirmWithEnter,
+    })
+    await init()
+  }
+
   return (
-    <Paper elevation={4} sx={{ p: 1, width: '100%' }}>
+    <Box
+      ref={errorPopperRef}
+      sx={{
+        px: 1.5,
+        py: 1,
+        borderTop: `1px solid ${t.hairline}`,
+        '&:hover': { backgroundColor: t.rowHover },
+        // The confirm state owns the row, so no hover tint competing with it.
+        ...(confirmingDelete && {
+          backgroundColor: t.dangerSoft,
+          '&:hover': { backgroundColor: t.dangerSoft },
+        }),
+      }}
+    >
       <SimplePopper
         anchorRef={errorPopperRef}
         message={error}
         placement={'top'}
       />
-      <Grid spacing={2} ref={errorPopperRef} container direction="column">
-        <Grid item>
-          <Grid container justifyContent="space-between" direction={'row'}>
-            <Box>
-              <Typography>Path:</Typography>
+
+      {confirmingDelete ? (
+        <Box
+          sx={{ display: 'flex', alignItems: 'center', gap: 1, minHeight: 30 }}
+        >
+          <Typography sx={{ font: t.font, color: t.danger, flex: 1 }}>
+            Delete this answer?
+          </Typography>
+          <Button
+            size="small"
+            onClick={() => setConfirmingDelete(false)}
+            sx={{ font: t.fontMeta, textTransform: 'none', color: t.textMuted }}
+          >
+            Cancel
+          </Button>
+          <Button
+            size="small"
+            onClick={() => {
+              setConfirmingDelete(false)
+              deleteAnswer(id)
+            }}
+            sx={{ font: t.fontMeta, textTransform: 'none', color: t.danger }}
+          >
+            Delete
+          </Button>
+        </Box>
+      ) : (
+        <>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: 0.5,
+              minHeight: 30,
+            }}
+          >
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              {editable ? (
+                <TextField
+                  variant="standard"
+                  fullWidth
+                  multiline
+                  value={editedAnswer.path.fieldName}
+                  onChange={(e) =>
+                    setEditedPath(id, 'fieldName', e.target.value)
+                  }
+                  InputProps={{ sx: { font: t.font } }}
+                />
+              ) : (
+                <Typography
+                  sx={{ font: t.font, color: t.text, wordBreak: 'break-word' }}
+                >
+                  {editedAnswer.path.fieldName}
+                </Typography>
+              )}
               {originalAnswer.matchType && (
-                <Typography variant="caption">
-                  Match: {sentenceCase(originalAnswer.matchType)}
+                <Typography sx={{ font: t.fontMeta, color: t.textMuted }}>
+                  {sentenceCase(originalAnswer.matchType)}
                 </Typography>
               )}
             </Box>
-            <Box>
-              {editable && (
-                <>
-                  {' '}
-                  <Button onClick={() => saveAnswer(id)}>Save</Button>
-                  <Button onClick={() => cancelEdit(id)}>Cancel</Button>
-                </>
-              )}
-            </Box>
-            <Box>
-              {!isNew && (
-                <ConfirmButton
-                  component="IconButton"
-                  action={() => deleteAnswer(id)}
-                  dialogTitle="Are You Sure?"
-                  buttonContent={<DeleteIcon />}
+
+            {editable ? (
+              <>
+                <Button
+                  size="small"
+                  onClick={() => saveAnswer(id)}
+                  sx={{
+                    font: t.fontMeta,
+                    textTransform: 'none',
+                    color: t.accent,
+                  }}
                 >
-                  Are you Sure you want to delete this answer? This action is
-                  not reversible.
-                </ConfirmButton>
-              )}
-            </Box>
-          </Grid>
-          <Breadcrumbs separator=">">
-            <Chip
-              variant="outlined"
-              label={editedAnswer.path.section}
-              avatar={
-                <Tooltip title="Section">
-                  <Avatar>S</Avatar>
-                </Tooltip>
-              }
-            />
+                  Save
+                </Button>
+                <Button
+                  size="small"
+                  onClick={() => cancelEdit(id)}
+                  sx={{
+                    font: t.fontMeta,
+                    textTransform: 'none',
+                    color: t.textMuted,
+                  }}
+                >
+                  Cancel
+                </Button>
+              </>
+            ) : (
+              <>
+                <IconButton
+                  size="small"
+                  title="Edit question"
+                  onClick={() => setEditable(id, true)}
+                  sx={iconButtonSx}
+                >
+                  <EditIcon sx={{ fontSize: 15 }} />
+                </IconButton>
+                {!isNew && (
+                  <IconButton
+                    size="small"
+                    title="Delete answer"
+                    onClick={() => setConfirmingDelete(true)}
+                    sx={iconButtonSx}
+                  >
+                    <DeleteIcon sx={{ fontSize: 15 }} />
+                  </IconButton>
+                )}
+              </>
+            )}
+          </Box>
 
-            <Chip
+          <Box sx={{ mt: 0.5 }}>
+            <backend.answerValue.displayComponent id={id} />
+          </Box>
+
+          {!isNew && (
+            <Button
+              size="small"
+              onClick={toggleConfirmWithEnter}
+              title="Some controls only accept a typed value once you press Enter."
               sx={{
-                height: 'auto',
-                minHeight: '32px',
-                textWrap: 'inherit',
-                '& .MuiChip-label': {
-                  display: 'block',
-                  whiteSpace: 'normal',
-                },
+                font: t.fontMeta,
+                textTransform: 'none',
+                px: 0.75,
+                mt: 0.25,
+                minWidth: 0,
+                color: originalAnswer.confirmWithEnter ? t.accent : t.textMuted,
+                backgroundColor: originalAnswer.confirmWithEnter
+                  ? t.accentSoft
+                  : 'transparent',
               }}
-              variant="outlined"
-              label={
-                editable ? (
-                  <TextField
-                    variant="standard"
-                    fullWidth
-                    multiline
-                    value={editedAnswer.path.fieldName}
-                    onChange={(e) =>
-                      setEditedPath(id, 'fieldName', e.target.value)
-                    }
-                    InputProps={{
-                      sx: { font: 'inherit', height: 'fit-content' },
-                      endAdornment: (
-                        <IconButton onClick={() => cancelEdit(id)}>
-                          <CloseIcon />
-                        </IconButton>
-                      ),
-                    }}
-                  />
-                ) : (
-                  editedAnswer.path.fieldName
-                )
-              }
-              avatar={
-                <Tooltip title="Question">
-                  <Avatar>Q</Avatar>
-                </Tooltip>
-              }
-              {...(!editable && {
-                deleteIcon: <EditIcon />,
-                onDelete: () => setEditable(id, true),
-              })}
-            />
-          </Breadcrumbs>
-        </Grid>
-
-        <Grid item>
-          <backend.answerValue.displayComponent id={id} />
-        </Grid>
-      </Grid>
-    </Paper>
+            >
+              {originalAnswer.confirmWithEnter
+                ? 'Presses Enter after filling'
+                : 'Press Enter after filling'}
+            </Button>
+          )}
+        </>
+      )}
+    </Box>
   )
 }

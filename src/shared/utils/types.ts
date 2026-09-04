@@ -31,7 +31,9 @@ export type Answer<T = any> = {
   path: FieldPath | null
   hasAnswer?: boolean
   matchType?: string
-  id?: number 
+  id?: number
+  /** See NewAnswer.confirmWithEnter. */
+  confirmWithEnter?: boolean
 }
 
 /**

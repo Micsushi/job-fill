@@ -1,67 +1,25 @@
-import {
-  Avatar,
-  Breadcrumbs,
-  Chip,
-  Tooltip,
-  Typography,
-} from '@mui/material'
+import { Box, Typography } from '@mui/material'
 import React, { FC } from 'react'
 
 import { useAppContext } from '../AppContext'
+import { t } from './tokens'
 
+/**
+ * Where this answer is filed. Previously a breadcrumb of avatar chips, which
+ * spent a whole row of the panel on four one-letter badges. It is reference
+ * detail, so it reads as one quiet line.
+ */
 export const FieldInfo: FC = () => {
   const { backend } = useAppContext()
+  const { section, fieldType } = backend.path
+
+  const parts = [section || 'No section', fieldType].filter(Boolean)
+
   return (
-    <>
-      {' '}
-      <Typography variant="h6">Question Path:</Typography>
-      <Breadcrumbs separator=">">
-        <Chip
-          variant="outlined"
-          avatar={
-            <Tooltip title="Page">
-              <Avatar>P</Avatar>
-            </Tooltip>
-          }
-          label={backend.path.page}
-        />
-        <Chip
-          variant="outlined"
-          avatar={
-            <Tooltip title="Section">
-              <Avatar>S</Avatar>
-            </Tooltip>
-          }
-          label={backend.path.section}
-        />
-        <Chip
-          variant="outlined"
-          avatar={
-            <Tooltip title="Field Type">
-              <Avatar>T</Avatar>
-            </Tooltip>
-          }
-          label={backend.path.fieldType}
-        />
-        <Chip
-          sx={{
-            height: 'auto',
-            minHeight: '32px',
-            textWrap: 'inherit',
-            '& .MuiChip-label': {
-              display: 'block',
-              whiteSpace: 'normal',
-            },
-          }}
-          variant="outlined"
-          avatar={
-            <Tooltip title="Question">
-              <Avatar>Q</Avatar>
-            </Tooltip>
-          }
-          label={backend.path.fieldName}
-        />
-      </Breadcrumbs>
-    </>
+    <Box sx={{ px: 1.5, py: 1 }}>
+      <Typography sx={{ font: t.fontMeta, color: t.textMuted }}>
+        {parts.join(' · ')}
+      </Typography>
+    </Box>
   )
 }

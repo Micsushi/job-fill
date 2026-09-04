@@ -35,6 +35,9 @@ export class Textarea extends GreenhouseReactBaseInput<any> {
     // thinking nothing changed, and hands a handler reading `event.target`
     // an undefined value.
     fillReactTextInput(this.inputElement, answers[0].answer)
+    if (answers[0].confirmWithEnter) {
+      await this.pressEnter(this.inputElement)
+    }
 
   }
 }

@@ -3,30 +3,23 @@ import './popup.css'
 import {
   Box,
   Button,
-  Chip,
-  Container,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  Divider,
   FormControl,
   FormControlLabel,
-  IconButton,
-  Paper,
   Radio,
   RadioGroup,
   Snackbar,
   SnackbarCloseReason,
   Stack,
-  Tooltip,
   Typography,
 } from '@mui/material'
 
 import { ThemeProvider } from '@emotion/react'
 import { theme } from '@src/shared/utils/react'
 import {
-  ContentCopyIcon,
   GitHubIcon,
   OpenInNewIcon,
   StorageIcon,
@@ -35,9 +28,9 @@ import {
   AutoFixHighIcon,
   ClearIcon,
   CleaningServicesIcon,
-  FiberManualRecordIcon,
+  UndoIcon,
+  RedoIcon,
 } from '@src/shared/utils/icons'
-import { LogoTitleBar } from '@src/shared/components/LogoTitleBar'
 import { answers1010 } from '@src/contentScript/utils/storage/Answers1010'
 import { DatabaseManager } from './DatabaseManager'
 import {
@@ -46,7 +39,24 @@ import {
   PageActionResult,
 } from '@src/shared/utils/pageActions'
 
-const EMAIL_ADDRESS = 'berellevy+chromeextensions@gmail.com'
+/** One compact control style, so the action rows line up exactly. */
+const buttonSx = {
+  textTransform: 'none' as const,
+  fontWeight: 600,
+  fontSize: 12,
+  px: 1,
+  whiteSpace: 'nowrap' as const,
+  '& .MuiButton-startIcon': { mr: 0.5 },
+  '& .MuiButton-startIcon > *': { fontSize: 15 },
+}
+
+const linkSx = {
+  textTransform: 'none' as const,
+  fontWeight: 600,
+  fontSize: 12,
+  color: 'text.secondary',
+  minWidth: 0,
+}
 
 export const App: FC<{}> = () => {
   const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false)
@@ -57,6 +67,8 @@ export const App: FC<{}> = () => {
   const [pendingImportJson, setPendingImportJson] = useState<any>(null)
   const [importFileName, setImportFileName] = useState<string>('')
   const [importMode, setImportMode] = useState<'merge' | 'replace'>('merge')
+  const [undoLabel, setUndoLabel] = useState<string | null>(null)
+  const [redoLabel, setRedoLabel] = useState<string | null>(null)
 
   /**
    * Page wide fill/clear. Lives here rather than as an on-page toolbar so we
@@ -82,6 +94,22 @@ export const App: FC<{}> = () => {
         })
     })
   }
+
+  // Ctrl+Z / Ctrl+Shift+Z. Bound in the popup only: binding them on the job
+  // page would hijack normal text undo inside the form fields.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== 'z') return
+      e.preventDefault()
+      if (e.shiftKey) {
+        handleRedo()
+      } else {
+        handleUndo()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  })
 
   // The page reports back through the content script once it has finished.
   useEffect(() => {
@@ -128,6 +156,35 @@ export const App: FC<{}> = () => {
     }
   }
 
+  const refreshHistory = () => {
+    setUndoLabel(answers1010.nextUndoLabel())
+    setRedoLabel(answers1010.nextRedoLabel())
+  }
+
+  const handleUndo = async () => {
+    const label = await answers1010.undo()
+    await refreshCount()
+    refreshHistory()
+    showNotify(label ? `Undid: ${label}` : 'Nothing to undo.')
+  }
+
+  const handleRedo = async () => {
+    const label = await answers1010.redo()
+    await refreshCount()
+    refreshHistory()
+    showNotify(label ? `Redid: ${label}` : 'Nothing to redo.')
+  }
+
+  const showWhatsNew = () => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const tabId = tabs[0]?.id
+      if (tabId === undefined) return
+      chrome.tabs
+        .sendMessage(tabId, { type: 'SHOW_WHATS_NEW' })
+        .catch(() => showNotify('Open a supported job page first.'))
+    })
+  }
+
   const refreshCount = async () => {
     try {
       await answers1010.load()
@@ -138,11 +195,11 @@ export const App: FC<{}> = () => {
   }
 
   useEffect(() => {
-    refreshCount()
+    refreshCount().then(refreshHistory)
     if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
       const listener = (changes: any, area: string) => {
         if (area === 'local' && changes.answers1010) {
-          refreshCount()
+          refreshCount().then(refreshHistory)
         }
       }
       chrome.storage.onChanged.addListener(listener)
@@ -214,208 +271,199 @@ export const App: FC<{}> = () => {
 
   return (
     <ThemeProvider theme={theme}>
-      <Box pb={'0.5em'}>
-        <LogoTitleBar>Job Fill</LogoTitleBar>
+      <Box
+        component="header"
+        sx={{
+          px: 2,
+          py: 1.5,
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+        }}
+      >
+        <Typography
+          component="h1"
+          sx={{
+            fontSize: 20,
+            fontWeight: 700,
+            letterSpacing: '-0.02em',
+            color: 'primary.dark',
+            lineHeight: 1,
+          }}
+        >
+          Job Fill
+        </Typography>
       </Box>
-      <Box component={'main'}>
-        <Container sx={{ my: 1.5, px: 2 }}>
-          {/* Quick Action bar */}
-          <Stack direction={'row'} spacing={1} sx={{ mb: 1.5 }}>
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={() => {
-                chrome.tabs.query(
-                  { active: true, currentWindow: true },
-                  (tabs) => {
-                    chrome.tabs
-                      .sendMessage(tabs[0].id, {
-                        type: 'SHOW_WHATS_NEW',
-                      })
-                      .catch(() => {
-                        showNotify('Works on supported job sites.')
-                      })
-                  }
-                )
-              }}
-            >
-              what's new?
-            </Button>
-            <Button
-              variant="outlined"
-              size="small"
-              href="https://youtu.be/JYMATq9siIY"
-              target="_blank"
-              endIcon={<OpenInNewIcon fontSize="small" />}
-            >
-              Tutorial
-            </Button>
-          </Stack>
 
-          {/* Whole page actions */}
-          <Stack direction={'row'} spacing={1} sx={{ mb: 1.5 }}>
+      <Box component="main" sx={{ px: 2, py: 2 }}>
+        <Stack spacing={2}>
+          {/* The two things this popup exists to do. */}
+          <Stack direction="row" spacing={1}>
             <Button
               variant="contained"
-              size="small"
+              disableElevation
               startIcon={<AutoFixHighIcon />}
               onClick={() => sendPageAction('fill')}
-              sx={{ flex: 1 }}
+              sx={{ flex: 1, textTransform: 'none', fontWeight: 600 }}
             >
-              Fill Page
+              Fill page
             </Button>
             <Button
               variant="outlined"
-              size="small"
               startIcon={<ClearIcon />}
               onClick={() => sendPageAction('clear')}
-              sx={{ flex: 1 }}
+              sx={{ flex: 1, textTransform: 'none', fontWeight: 600 }}
             >
-              Clear Page
+              Clear page
             </Button>
           </Stack>
 
-          {/* Permanent Database Center */}
-          <Paper
-            variant="outlined"
-            sx={{
-              p: 1.5,
-              mb: 2,
-              borderRadius: 2,
-              backgroundColor: '#fafafa',
-              borderColor: '#e0e0e0',
-            }}
-          >
-            <Stack spacing={1.2}>
-              <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
+          {/* Saved answers */}
+          <Box>
+            <Stack
+              direction="row"
+              alignItems="baseline"
+              justifyContent="space-between"
+              sx={{ mb: 1 }}
+            >
+              <Typography
+                sx={{ fontSize: 13, fontWeight: 700, color: 'text.primary' }}
               >
-                <Stack direction="row" spacing={0.8} alignItems="center">
-                  <FiberManualRecordIcon
-                    sx={{ color: '#2e7d32', fontSize: 12 }}
-                  />
-                  <Typography variant="subtitle2" fontWeight="bold">
-                    Permanent Database
-                  </Typography>
-                </Stack>
-                <Chip
-                  label={`${recordCount} Saved Answers`}
-                  size="small"
-                  color="primary"
-                  variant="outlined"
-                  sx={{ fontWeight: 'bold' }}
-                />
-              </Stack>
-
-              <Typography variant="caption" color="text.secondary">
-                Protected via Local Storage + IndexedDB mirror + auto-recovery.
+                Saved answers
               </Typography>
-
-              <Divider sx={{ my: 0.5 }} />
-
-              <Stack direction="row" spacing={1}>
-                <Button
-                  variant="contained"
-                  size="small"
-                  startIcon={<FileDownloadIcon />}
-                  onClick={handleExportDb}
-                  sx={{ flex: 1 }}
-                >
-                  Export DB
-                </Button>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  component="label"
-                  startIcon={<UploadFileIcon />}
-                  sx={{ flex: 1 }}
-                >
-                  Import DB
-                  <input
-                    type="file"
-                    accept=".json"
-                    hidden
-                    onChange={handleFileSelected}
-                  />
-                </Button>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<StorageIcon />}
-                  onClick={() => setDbManagerOpen(true)}
-                  sx={{ flex: 1.2 }}
-                >
-                  Manage DB
-                </Button>
-              </Stack>
-              <Stack direction="row" spacing={1}>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<CleaningServicesIcon />}
-                  onClick={handleCleanUp}
-                  sx={{ flex: 1 }}
-                >
-                  Clean Up DB
-                </Button>
-              </Stack>
+              <Typography
+                sx={{ fontSize: 13, fontWeight: 600, color: 'primary.main' }}
+              >
+                {recordCount}
+              </Typography>
             </Stack>
-          </Paper>
 
-          <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 1 }}>
-            Supported ATS Platforms
-          </Typography>
-          <Typography variant="body2" color="text.secondary" mb={0.5}>
-            Greenhouse React, Lever, and Workday forms.
-          </Typography>
-          <Typography variant="caption" color="text.secondary" display="block">
-            Your data is stored locally and securely on your browser.
-          </Typography>
-
-          <Divider sx={{ my: 1.5 }} />
-
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            alignItems="center"
-          >
-            <Button
-              target="_blank"
-              href="https://github.com/berellevy/job_app_filler"
-              startIcon={<GitHubIcon />}
-              size="small"
-              variant="text"
+            <Stack
+              direction="row"
+              spacing={0.75}
+              sx={{ '& > *': { flex: 1, minWidth: 0 } }}
             >
-              GitHub
-            </Button>
-            <Stack direction="row" alignItems="center">
-              <Tooltip title={EMAIL_ADDRESS}>
-                <Button
-                  href={'mailto:' + EMAIL_ADDRESS}
-                  size="small"
-                  variant="text"
-                  target="_blank"
-                >
-                  Contact
-                </Button>
-              </Tooltip>
-              <Tooltip title="Copy email address">
-                <IconButton
-                  size="small"
-                  onClick={() => {
-                    navigator.clipboard.writeText(EMAIL_ADDRESS)
-                    showNotify('Email copied.')
-                  }}
-                >
-                  <ContentCopyIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<StorageIcon />}
+                onClick={() => setDbManagerOpen(true)}
+                sx={buttonSx}
+              >
+                Manage
+              </Button>
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<FileDownloadIcon />}
+                onClick={handleExportDb}
+                sx={buttonSx}
+              >
+                Export
+              </Button>
+              <Button
+                size="small"
+                variant="outlined"
+                component="label"
+                startIcon={<UploadFileIcon />}
+                sx={buttonSx}
+              >
+                Import
+                <input
+                  type="file"
+                  accept=".json"
+                  hidden
+                  onChange={handleFileSelected}
+                />
+              </Button>
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<CleaningServicesIcon />}
+                onClick={handleCleanUp}
+                sx={buttonSx}
+              >
+                Tidy
+              </Button>
             </Stack>
-          </Stack>
-        </Container>
+          </Box>
 
-        {/* Database Records Manager Modal */}
+          {/* History. Labelled with the action so it is clear what reverts. */}
+          <Box>
+            <Typography
+              sx={{ fontSize: 13, fontWeight: 700, mb: 1 }}
+            >
+              History
+            </Typography>
+            <Stack direction="row" spacing={0.75}>
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<UndoIcon />}
+                disabled={!undoLabel}
+                onClick={handleUndo}
+                sx={{ ...buttonSx, flex: 1 }}
+              >
+                {undoLabel ? `Undo ${undoLabel}` : 'Nothing to undo'}
+              </Button>
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<RedoIcon />}
+                disabled={!redoLabel}
+                onClick={handleRedo}
+                sx={{ ...buttonSx, flexShrink: 0 }}
+              >
+                Redo
+              </Button>
+            </Stack>
+            <Typography
+              sx={{ fontSize: 11, color: 'text.secondary', mt: 0.75 }}
+            >
+              Ctrl+Z to undo, Ctrl+Shift+Z to redo
+            </Typography>
+          </Box>
+        </Stack>
+      </Box>
+
+      <Box
+        component="footer"
+        sx={{
+          px: 1,
+          py: 0.5,
+          borderTop: '1px solid',
+          borderColor: 'divider',
+          display: 'flex',
+          justifyContent: 'space-between',
+        }}
+      >
+        <Button size="small" variant="text" sx={linkSx} onClick={showWhatsNew}>
+          What's new
+        </Button>
+        <Button
+          size="small"
+          variant="text"
+          sx={linkSx}
+          href="https://youtu.be/JYMATq9siIY"
+          target="_blank"
+          endIcon={<OpenInNewIcon sx={{ fontSize: 14 }} />}
+        >
+          Tutorial
+        </Button>
+        <Button
+          size="small"
+          variant="text"
+          sx={linkSx}
+          href="https://github.com/Micsushi/job-fill"
+          target="_blank"
+          startIcon={<GitHubIcon sx={{ fontSize: 14 }} />}
+        >
+          GitHub
+        </Button>
+      </Box>
+
+      <Box sx={{ px: 2, pb: 2 }}>
+
+                {/* Database Records Manager Modal */}
         <DatabaseManager
           open={dbManagerOpen}
           onClose={() => setDbManagerOpen(false)}
