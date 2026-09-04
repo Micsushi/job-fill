@@ -22,7 +22,14 @@ export abstract class GreenhouseReactBaseInput<
   }
 
   get section(): string {
-    return this.sectionElement()?.getAttribute("jaf-section") || ""
+    // The phone dialling-code picker is also labelled "Country", and is the
+    // same field type as the address country dropdown. Without something to
+    // separate them, one answer list serves both and "+1" competes with
+    // "Canada". The fieldset it lives in is that separator.
+    if (this.element.closest('.phone-input__country')) {
+      return 'phone country'
+    }
+    return this.sectionElement()?.getAttribute('jaf-section') || ''
   }
   attachReactApp(app: React.ReactNode, inputContainer: HTMLElement): void {
     const rootElement = document.createElement('div')
