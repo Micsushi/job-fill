@@ -1,4 +1,4 @@
-import { getElement, getElements } from '@src/shared/utils/getElements'
+import { getElements } from '@src/shared/utils/getElements'
 import stringMatch from '@src/shared/utils/stringMatch'
 import { LeverBaseInput } from './LeverBaseInput'
 

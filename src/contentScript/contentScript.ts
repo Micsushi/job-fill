@@ -1,7 +1,13 @@
 import { Server } from '@src/shared/utils/crossContextCommunication/server'
 import { FieldPath, Answer } from '@src/shared/utils/types'
 import { EVENT_LISTENER_ID, loadApp } from './app/App'
-import { PAGE_ACTION_EVENT } from '@src/shared/utils/pageActions'
+import {
+  PAGE_ACTION_EVENT,
+  PAGE_ACTION_MESSAGE,
+  PAGE_ACTION_RESULT_EVENT,
+  PAGE_ACTION_RESULT_MESSAGE,
+  PageActionResult,
+} from '@src/shared/utils/pageActions'
 import { answers1010, migrate1010 } from './utils/storage/Answers1010'
 import { convert106To1010, convert1010To106 } from './utils/storage/DataStore'
 import { SavedAnswer } from './utils/storage/DataStoreTypes'
@@ -47,12 +53,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
   // Relay page wide fill/clear from the popup. The field instances live in
   // the page's own context, which the popup cannot reach directly.
-  if (message.type === 'JAF_PAGE_ACTION') {
+  if (message.type === PAGE_ACTION_MESSAGE) {
     document.dispatchEvent(
       new CustomEvent(PAGE_ACTION_EVENT, { detail: message.action })
     )
     sendResponse({ ok: true })
   }
+})
+
+// Carry the page's result back to the popup, if it is still open.
+document.addEventListener(PAGE_ACTION_RESULT_EVENT, (event: Event) => {
+  const result = (event as CustomEvent).detail as PageActionResult
+  chrome.runtime
+    .sendMessage({ type: PAGE_ACTION_RESULT_MESSAGE, result })
+    .catch(() => {
+      // Popup already closed. Nothing to report to.
+    })
 })
 
 const run = async () => {

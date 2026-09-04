@@ -41,9 +41,6 @@
       "all_frames": true
     }
   ],
-  "optional_host_permissions": [
-    "https://*/*"
-  ],
   "permissions": [
     "storage",
     "unlimitedStorage"

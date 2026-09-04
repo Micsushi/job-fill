@@ -51,14 +51,8 @@ const assignNumbersToSections = () => {
  */
 export class Section {
   static XPATH = SECTION_XPATH
-  element: HTMLElement
 
   static async autoDiscover(_node: Node = document) {
-    assignNumbersToSections()
-  }
-
-  constructor(element: HTMLElement) {
-    this.element = element
     assignNumbersToSections()
   }
 }

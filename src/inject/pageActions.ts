@@ -1,7 +1,9 @@
 import { registeredInputs } from './app/services/formFields/baseFormInput'
 import {
   PAGE_ACTION_EVENT,
+  PAGE_ACTION_RESULT_EVENT,
   PageAction,
+  PageActionResult,
 } from '@src/shared/utils/pageActions'
 
 /**
@@ -9,16 +11,12 @@ import {
  * on-page toolbar so nothing is painted over the host site.
  *
  * The popup can only talk to the content script, and the field instances live
- * in the page's own context, so the content script relays a DOM event that
- * this listener picks up.
+ * in the page's own context, so the content script relays a DOM event in and
+ * carries the result back out.
  */
-export type PageActionResult = {
-  total: number
-  failed: number
-}
 
 /**
- * Runs one at a time on purpose: these are controlled react forms, and
+ * Runs one field at a time on purpose: these are controlled react forms, and
  * firing every onChange in the same tick makes react-select drop updates.
  */
 const runAction = async (action: PageAction): Promise<PageActionResult> => {
@@ -34,13 +32,17 @@ const runAction = async (action: PageAction): Promise<PageActionResult> => {
     }
   }
 
-  return { total: inputs.length, failed }
+  return { action, total: inputs.length, failed }
 }
 
 export const listenForPageActions = (): void => {
-  document.addEventListener(PAGE_ACTION_EVENT, (event: Event) => {
+  document.addEventListener(PAGE_ACTION_EVENT, async (event: Event) => {
     const action = (event as CustomEvent).detail as PageAction
     if (action !== 'fill' && action !== 'clear') return
-    runAction(action)
+
+    const result = await runAction(action)
+    document.dispatchEvent(
+      new CustomEvent(PAGE_ACTION_RESULT_EVENT, { detail: result })
+    )
   })
 }

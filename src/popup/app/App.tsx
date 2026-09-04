@@ -39,6 +39,11 @@ import {
 import { LogoTitleBar } from '@src/shared/components/LogoTitleBar'
 import { answers1010 } from '@src/contentScript/utils/storage/Answers1010'
 import { DatabaseManager } from './DatabaseManager'
+import {
+  PAGE_ACTION_MESSAGE,
+  PAGE_ACTION_RESULT_MESSAGE,
+  PageActionResult,
+} from '@src/shared/utils/pageActions'
 
 const EMAIL_ADDRESS = 'berellevy+chromeextensions@gmail.com'
 
@@ -67,7 +72,7 @@ export const App: FC<{}> = () => {
       const tabId = tabs[0]?.id
       if (tabId === undefined) return
       chrome.tabs
-        .sendMessage(tabId, { type: 'JAF_PAGE_ACTION', action })
+        .sendMessage(tabId, { type: PAGE_ACTION_MESSAGE, action })
         .then(() => {
           showNotify(action === 'fill' ? 'Filling page...' : 'Clearing page...')
         })
@@ -76,6 +81,24 @@ export const App: FC<{}> = () => {
         })
     })
   }
+
+  // The page reports back through the content script once it has finished.
+  useEffect(() => {
+    const onMessage = (message: any) => {
+      if (message?.type !== PAGE_ACTION_RESULT_MESSAGE) return
+      const { action, total, failed } = message.result as PageActionResult
+      const verb = action === 'fill' ? 'Filled' : 'Cleared'
+      if (total === 0) {
+        showNotify('No supported fields found on this page.')
+      } else if (failed) {
+        showNotify(`${verb} ${total - failed} of ${total} fields.`)
+      } else {
+        showNotify(`${verb} ${total} field${total === 1 ? '' : 's'}.`)
+      }
+    }
+    chrome.runtime.onMessage.addListener(onMessage)
+    return () => chrome.runtime.onMessage.removeListener(onMessage)
+  }, [])
 
   const refreshCount = async () => {
     try {

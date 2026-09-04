@@ -15,6 +15,14 @@ export abstract class LeverBaseInput<AnswerType> extends BaseFormInput<AnswerTyp
     )
   }
 
+  /**
+   * Lever has no repeating sections. Its application form is a flat list:
+   * fixed fields (name, email, resume), `urls[LinkedIn]` style link fields,
+   * and custom question cards named `cards[<uuid>][fieldN]`, where the uuid
+   * identifies the card rather than a repeat index and changes per posting.
+   * There is no "Add another" anywhere, so a blank section is correct, and
+   * keying off the uuid would stop answers carrying between postings.
+   */
   public get section(): string {
     return ''
   }

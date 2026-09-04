@@ -53,7 +53,26 @@ export class File extends GreenhouseReactBaseInput<any> {
     }
   }
 
+  /**
+   * Delegated on the field rather than bound to the input itself: these forms
+   * re-render and swap the native input out, which would drop a direct
+   * listener. Capture phase because `change` does not bubble.
+   */
+  private watchForFileSelection(): void {
+    this.element.addEventListener(
+      'change',
+      (event: Event) => {
+        const target = event.target as HTMLInputElement | null
+        if (target?.type !== 'file') return
+        this.capturedFile = target.files?.[0] ?? null
+      },
+      true
+    )
+  }
+
   listenForChanges(): void {
+    this.watchForFileSelection()
+
     const observer = new MutationObserver((mutations: MutationRecord[]) => {
       const XPATH = `self::*[starts-with(@class, "file-upload__filename")]`
       if (getElement(mutations, XPATH)) {
