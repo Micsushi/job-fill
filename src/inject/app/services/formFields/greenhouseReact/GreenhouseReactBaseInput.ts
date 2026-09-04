@@ -1,7 +1,7 @@
 import { renderWidget } from '../../../App'
 import { BaseFormInput } from '../baseFormInput'
-import { getElement, getElements } from '@src/shared/utils/getElements'
-import { getReactProps } from '../utils'
+import { getElement } from '@src/shared/utils/getElements'
+import { clearFormControls } from '../utils'
 
 export abstract class GreenhouseReactBaseInput<
   AnswerType
@@ -66,33 +66,10 @@ export abstract class GreenhouseReactBaseInput<
   }
 
   /**
-   * Empty every native control inside the field. Greenhouse is a controlled
-   * React form, so the value has to be pushed back through the react onChange
-   * handler or the next render puts the old value straight back.
+   * Reset every control in this field.
    */
   async clear(): Promise<void> {
-    const controls = getElements(
-      this.element,
-      './/input | .//textarea'
-    ) as (HTMLInputElement | HTMLTextAreaElement)[]
-
-    controls.forEach((control) => {
-      if (control.disabled || control.readOnly) return
-
-      const type = (control as HTMLInputElement).type
-      if (type === 'hidden' || type === 'file' || type === 'submit') return
-
-      if (type === 'checkbox' || type === 'radio') {
-        if ((control as HTMLInputElement).checked) {
-          control.click()
-        }
-        return
-      }
-
-      if (!control.value) return
-      control.value = ''
-      getReactProps(control)?.onChange?.({ currentTarget: control })
-    })
+    clearFormControls(this.element)
     this.triggerReactUpdate()
   }
 }

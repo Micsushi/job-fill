@@ -41,14 +41,6 @@ function isInRect(
   })
 }
 
-const handleEscape = (e: KeyboardEvent) => {
-  if (e.key === 'Escape') {
-    e.preventDefault()
-    close()
-    document.removeEventListener('keyup', handleEscape)
-  }
-}
-
 export const usePopperState = ({init, backend}: Pick<AppContextType, "init" | "backend">): PopperState => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const anchorRef = useRef<HTMLElement | null>(null)

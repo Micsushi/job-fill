@@ -1,6 +1,7 @@
 import { renderWidget } from '../../../App'
 import { BaseFormInput } from '../baseFormInput'
 import { getElement } from '@src/shared/utils/getElements'
+import { clearFormControls } from '../utils'
 
 export abstract class LeverBaseInput<AnswerType> extends BaseFormInput<AnswerType> {
   get labelDisplayElement(): HTMLElement {
@@ -36,4 +37,13 @@ export abstract class LeverBaseInput<AnswerType> extends BaseFormInput<AnswerTyp
     }
     renderWidget(rootElement, app)
   }
+
+  /**
+   * Reset every control in this field.
+   */
+  async clear(): Promise<void> {
+    clearFormControls(this.element)
+    this.triggerReactUpdate()
+  }
+
 }

@@ -1,6 +1,7 @@
 import { renderWidget } from '../../../App'
 import { getElement } from '@src/shared/utils/getElements'
 import { BaseFormInput } from '../baseFormInput'
+import { clearFormControls } from '../utils'
 
 export abstract class WorkdayBaseInput<
   AnswerType
@@ -48,4 +49,13 @@ export abstract class WorkdayBaseInput<
     // must always return a string, even a blank one.
     return this.sectionLabelElement?.innerText || ''
   }
+
+  /**
+   * Reset every control in this field.
+   */
+  async clear(): Promise<void> {
+    clearFormControls(this.element)
+    this.triggerReactUpdate()
+  }
+
 }

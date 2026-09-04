@@ -95,7 +95,9 @@ export const App: FC<{}> = () => {
       a.href = url
       a.download = `job_app_filler_db_${new Date().toISOString().slice(0, 10)}.json`
       a.click()
-      URL.revokeObjectURL(url)
+      // Revoking synchronously can abort a download that hasn't started,
+      // and the popup may close first.
+      setTimeout(() => URL.revokeObjectURL(url), 10_000)
       showNotify(`Exported ${data.totalRecords} records!`)
     } catch (e) {
       showNotify('Failed to export database.')
@@ -240,7 +242,6 @@ export const App: FC<{}> = () => {
                 <Button
                   variant="outlined"
                   size="small"
-                  color="secondary"
                   startIcon={<StorageIcon />}
                   onClick={() => setDbManagerOpen(true)}
                   sx={{ flex: 1.2 }}
@@ -387,4 +388,4 @@ export const App: FC<{}> = () => {
       </Box>
     </ThemeProvider>
   )
-}
+}

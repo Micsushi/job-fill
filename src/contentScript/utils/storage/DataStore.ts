@@ -122,6 +122,24 @@ export function areFieldNamesCompatible(
   return true
 }
 
+/**
+ * Imported files are hand editable, so nothing about their shape is
+ * guaranteed. Drop anything that can't be stored safely rather than letting
+ * it into the store, where the fill logic would dereference it later.
+ */
+export function sanitizeImportedRecord(raw: any): NewAnswer | null {
+  if (!raw || typeof raw !== 'object') return null
+  if (typeof raw.fieldName !== 'string' || !raw.fieldName.trim()) return null
+  if (!('answer' in raw)) return null
+
+  return {
+    fieldName: raw.fieldName,
+    answer: raw.answer,
+    section: typeof raw.section === 'string' ? raw.section : '',
+    fieldType: typeof raw.fieldType === 'string' ? raw.fieldType : 'TextInput',
+  } as NewAnswer
+}
+
 class ExactMatchIndex {
   store: { [key: string]: number[] }
   constructor() {
@@ -272,17 +290,17 @@ export class DataStore {
     }
     await chrome.storage.local.set({ [this.name]: data })
 
-    // Secondary rolling backup snapshot
-    if (this.store.size > 0) {
-      await chrome.storage.local.set({
-        [`${this.name}_backup`]: {
-          ...data,
-          updatedAt: new Date().toISOString(),
-          recordCount: this.store.size,
-        },
-      })
-      saveToPermanentDb(this.getAll(), this.autoIncrement).catch(() => {})
-    }
+    // Mirror unconditionally, empty store included. Skipping the write when
+    // the store is empty makes deletions un-stick: the stale backup outlives
+    // them and gets restored on the next load.
+    await chrome.storage.local.set({
+      [`${this.name}_backup`]: {
+        ...data,
+        updatedAt: new Date().toISOString(),
+        recordCount: this.store.size,
+      },
+    })
+    saveToPermanentDb(this.getAll(), this.autoIncrement).catch(() => {})
   }
 
   // Load the store and current ID from chrome.storage.local with automatic recovery
@@ -291,8 +309,12 @@ export class DataStore {
     const result = await chrome.storage.local.get([this.name, backupKey])
     let storeData = result[this.name]
 
-    // If primary storage is missing or empty, auto-recover from secondary backup!
-    if (!storeData || !storeData.store || storeData.store.length === 0) {
+    // Recover only when the key is absent or unreadable. An empty store is a
+    // legitimate state -- the user deleted their last answer -- and restoring
+    // over it would silently undo the deletion.
+    const isMissing =
+      !storeData || typeof storeData !== 'object' || !Array.isArray(storeData.store)
+    if (isMissing) {
       if (
         result[backupKey] &&
         result[backupKey].store &&
@@ -409,8 +431,9 @@ export class DataStore {
     let added = 0
     let updated = 0
 
-    for (const record of recordsToImport) {
-      if (!record || !record.fieldName) continue
+    for (const raw of recordsToImport) {
+      const record = sanitizeImportedRecord(raw)
+      if (!record) continue
       const existing = this.findExisting(record)
       if (existing) {
         this.update({ ...record, id: existing.id })

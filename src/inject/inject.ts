@@ -13,9 +13,13 @@ const inputRegistrars: [string, InputSetup][] = [
   ['boards.eu.greenhouse.io', greenhouse],
   ['lever.co', lever],
 ]
+const matchesHost = (domain: string, site: string): boolean => {
+  return domain === site || domain.endsWith(`.${site}`)
+}
+
 const getRegisterInput = (domain: string): InputSetup | undefined => {
   const match = inputRegistrars.find((site) => {
-    return domain.endsWith(site[0])
+    return matchesHost(domain, site[0])
   })
   if (match) return match[1]
 
@@ -51,7 +55,10 @@ const run = async () => {
     return
   }
 
-  // Observe for dynamically rendered ATS forms on arbitrary URLs
+  // The host didn't match a known registrar, so watch for an ATS form that
+  // renders late. Bounded: an observer that never disconnects would sit on
+  // every mutation of the page for as long as the tab is open.
+  const FALLBACK_TIMEOUT_MS = 30_000
   const fallbackObserver = new MutationObserver(async (_, obs) => {
     RegisterInputs = getRegisterInput(window.location.host)
     if (RegisterInputs) {
@@ -72,6 +79,7 @@ const run = async () => {
     childList: true,
     subtree: true,
   })
+  setTimeout(() => fallbackObserver.disconnect(), FALLBACK_TIMEOUT_MS)
 }
 
 /**

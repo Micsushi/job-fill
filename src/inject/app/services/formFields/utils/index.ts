@@ -1,3 +1,5 @@
+import { getElements } from '@src/shared/utils/getElements'
+
 /**
  * given the regular dom element, get the props of the corresponding
  * react element. available as a property `__reactProps${random suffix}`
@@ -60,5 +62,38 @@ export const addCharacterMutationObserver = (
     characterData: true,
     childList: true,
     subtree: true,
+  })
+}
+
+
+/**
+ * Empty every native control inside a field.
+ *
+ * Goes through `fillReactTextInput` so the value is pushed back through the
+ * framework rather than only set on the DOM node: Greenhouse, Lever and
+ * Workday are all controlled, and a bare `.value = ""` is reverted on the
+ * next render.
+ */
+export const clearFormControls = (element: HTMLElement): void => {
+  const controls = getElements(
+    element,
+    './/input | .//textarea'
+  ) as (HTMLInputElement | HTMLTextAreaElement)[]
+
+  controls.forEach((control) => {
+    if (control.disabled || control.readOnly) return
+
+    const type = (control as HTMLInputElement).type
+    if (type === 'hidden' || type === 'file' || type === 'submit') return
+
+    if (type === 'checkbox' || type === 'radio') {
+      if ((control as HTMLInputElement).checked) {
+        control.click()
+      }
+      return
+    }
+
+    if (!control.value) return
+    fillReactTextInput(control as HTMLInputElement, '')
   })
 }

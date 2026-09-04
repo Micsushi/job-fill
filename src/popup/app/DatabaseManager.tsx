@@ -152,7 +152,9 @@ export const DatabaseManager: FC<DatabaseManagerProps> = ({
     a.href = url
     a.download = `job_app_filler_db_${new Date().toISOString().slice(0, 10)}.json`
     a.click()
-    URL.revokeObjectURL(url)
+    // Revoking synchronously can abort a download that hasn't started,
+    // and the popup may close first.
+    setTimeout(() => URL.revokeObjectURL(url), 10_000)
     onNotify('Database exported!')
   }
 
