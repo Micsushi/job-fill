@@ -5,3 +5,8 @@ package-lock.json
 releases
 .DS_Store
 .vscode
+# Backups and database dumps
+*.json.bak
+*_backup*.json
+*job_app_filler_db*.json
+*.db

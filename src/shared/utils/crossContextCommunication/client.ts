@@ -16,7 +16,7 @@ export class Client {
     public send<ResponseData = any>(
       methodName: string,
       data?: any,
-      timeout: number = 5000
+      timeout: number = 20000
     ): Promise<ResponseBody<ResponseData>> {
       const requestId = uuid4()
       return new Promise<ResponseBody<ResponseData>>((resolve, reject) => {

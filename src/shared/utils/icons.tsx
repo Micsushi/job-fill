@@ -18,3 +18,6 @@ export { default as InsertDriveFileIcon } from '@mui/icons-material/InsertDriveF
 export { default as UploadFileIcon } from '@mui/icons-material/UploadFile'
 export { default as FiberManualRecordIcon } from '@mui/icons-material/FiberManualRecord'
 export { default as OpenInNewIcon } from '@mui/icons-material/OpenInNew'
+export { default as StorageIcon } from '@mui/icons-material/Storage'
+export { default as FileDownloadIcon } from '@mui/icons-material/FileDownload'
+export { default as SearchIcon } from '@mui/icons-material/Search'

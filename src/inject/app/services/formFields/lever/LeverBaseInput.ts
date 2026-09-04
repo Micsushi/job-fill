@@ -2,24 +2,22 @@ import { renderWidget } from '../../../App'
 import { BaseFormInput } from '../baseFormInput'
 import { getElement } from '@src/shared/utils/getElements'
 
-export abstract class GreenhouseReactBaseInput<
-  AnswerType
-> extends BaseFormInput<AnswerType> {
+export abstract class LeverBaseInput<AnswerType> extends BaseFormInput<AnswerType> {
   get labelDisplayElement(): HTMLElement {
     return this.labelElement
   }
-  abstract get labelElement(): HTMLElement
 
-  sectionElement(): HTMLElement {
-    return getElement(
-      this.element,
-      `ancestor::div[@jaf-section][1]`
+  get labelElement(): HTMLElement {
+    return (
+      getElement(this.element, './/*[contains(@class, "application-label")]') ||
+      getElement(this.element, './/label')
     )
   }
 
-  get section(): string {
-    return this.sectionElement()?.getAttribute("jaf-section") || ""
+  public get section(): string {
+    return ''
   }
+
   attachReactApp(app: React.ReactNode, inputContainer: HTMLElement): void {
     const rootElement = document.createElement('div')
     rootElement.classList.add('jaf-widget')
@@ -27,10 +25,14 @@ export abstract class GreenhouseReactBaseInput<
     rootElement.style.alignItems = 'center'
     rootElement.style.margin = '4px 0'
 
-    if (this.element.parentElement) {
-      this.element.insertAdjacentElement('beforebegin', rootElement)
+    const field = getElement(
+      this.element,
+      './/*[contains(@class, "application-field")]'
+    )
+    if (field) {
+      field.insertAdjacentElement('beforebegin', rootElement)
     } else {
-      this.labelDisplayElement.insertAdjacentElement('afterend', rootElement)
+      this.element.insertAdjacentElement('afterbegin', rootElement)
     }
     renderWidget(rootElement, app)
   }

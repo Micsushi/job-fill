@@ -167,22 +167,37 @@ export abstract class BaseFormInput<AnswerType> {
   }
 
   async save(answer: Answer): Promise<Answer> {
-    const response = await contentScriptAPI.send('saveAnswer', answer)
-    return response.data
+    try {
+      const response = await contentScriptAPI.send('saveAnswer', answer)
+      return response.data
+    } catch (err) {
+      console.warn('JobAppFiller: Failed to save answer', err)
+      return answer
+    }
   }
 
   async deleteAnswer(id: number): Promise<boolean> {
-    const res = await contentScriptAPI.send('deleteAnswer', id)
-    return res.ok
+    try {
+      const res = await contentScriptAPI.send('deleteAnswer', id)
+      return Boolean(res.ok)
+    } catch (err) {
+      console.warn('JobAppFiller: Failed to delete answer', err)
+      return false
+    }
   }
 
   async answer(path?: FieldPath): Promise<Answer[]> {
-    path = path || this.path
-    const res = await contentScriptAPI.send('getAnswer', path)
-    if (res.ok) {
-      return res.data
-    } else {
-      console.log(res, this.path)
+    try {
+      path = path || this.path
+      const res = await contentScriptAPI.send('getAnswer', path)
+      if (res.ok) {
+        return res.data
+      } else {
+        console.log(res, this.path)
+        return []
+      }
+    } catch (err) {
+      console.warn('JobAppFiller: Failed to get answer', err)
       return []
     }
   }

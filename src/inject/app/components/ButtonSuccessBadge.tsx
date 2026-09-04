@@ -22,9 +22,21 @@ export const ButtonSuccessBadge: FC<ButtonSuccessBadgeProps> = ({
   return (
     <StyledBadge
       badgeContent={
-        <Fade in={show}>
-          <CheckCircleIcon color="success" sx={{ fontSize: '.6rem' }} />
-        </Fade>
+        show ? (
+          <Fade in={show}>
+            <CheckCircleIcon
+              color="success"
+              sx={{
+                fontSize: '.6rem',
+                width: '12px !important',
+                height: '12px !important',
+                maxWidth: '12px !important',
+                maxHeight: '12px !important',
+                fill: '#2e7d32 !important',
+              }}
+            />
+          </Fade>
+        ) : null
       }
     >
       {props.children}

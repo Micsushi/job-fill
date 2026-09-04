@@ -14,9 +14,9 @@ export const MoreInfoPopper: FC = () => {
       ref={popperRef}
       open={isOpen}
       anchorEl={anchorEl}
-      placement="right-end"
+      placement="bottom-start"
       transition
-      sx={{ zIndex: 100 }}
+      sx={{ zIndex: 999999 }}
     >
       {({ TransitionProps }) => (
         <Fade {...TransitionProps} timeout={350}>

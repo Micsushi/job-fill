@@ -1,8 +1,6 @@
 import React, { FC } from 'react'
-import { Button, Tooltip } from '@mui/material'
-import { AutoFixHighIcon } from '@src/shared/utils/icons'
+import { AutoFixHighIcon, CheckCircleIcon } from '@src/shared/utils/icons'
 import { useAppContext } from '../AppContext'
-import { ButtonSuccessBadge } from '../components/ButtonSuccessBadge'
 
 export const FillButton: FC = () => {
   const {
@@ -10,14 +8,41 @@ export const FillButton: FC = () => {
   } = useAppContext()
 
   return (
-    <Tooltip title="Autofill" placement="top" arrow>
-      <span>
-        <ButtonSuccessBadge show={isFilled}>
-          <Button onClick={onClick} disabled={isDisabled}>
-            <AutoFixHighIcon />
-          </Button>
-        </ButtonSuccessBadge>
-      </span>
-    </Tooltip>
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={isDisabled}
+      title="Autofill"
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '28px',
+        height: '24px',
+        border: 'none',
+        background: 'none',
+        cursor: isDisabled ? 'not-allowed' : 'pointer',
+        padding: '0',
+        position: 'relative',
+        color: isFilled ? '#2e7d32' : '#455a64',
+        outline: 'none',
+      }}
+    >
+      <AutoFixHighIcon style={{ width: '16px', height: '16px', fill: 'currentColor' }} />
+      {isFilled && (
+        <CheckCircleIcon
+          style={{
+            position: 'absolute',
+            top: '-2px',
+            right: '-2px',
+            width: '10px',
+            height: '10px',
+            fill: '#2e7d32',
+            backgroundColor: '#ffffff',
+            borderRadius: '50%',
+          }}
+        />
+      )}
+    </button>
   )
 }

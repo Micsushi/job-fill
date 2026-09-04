@@ -1,4 +1,4 @@
-import { createRoot } from 'react-dom/client'
+import { renderWidget } from '../../../App'
 import { getElement } from '@src/shared/utils/getElements'
 import { BaseFormInput } from '../baseFormInput'
 
@@ -14,7 +14,7 @@ export abstract class WorkdayBaseInput<
     // it makes the element disappear
     const rootElement = document.createElement('div')
     inputContainer.insertBefore(rootElement, inputContainer.lastChild)
-    createRoot(rootElement).render(app)
+    renderWidget(rootElement, app)
   }
 
 

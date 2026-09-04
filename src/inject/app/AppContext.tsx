@@ -59,9 +59,13 @@ export const ContextProvider: FC<{
   const fieldNotice = backend.fieldNotice
   useEffect(() => {
     ;(async () => {
-      await editableAnswerState.init()
-      await refresh()
-      await handleFill()
+      try {
+        await editableAnswerState.init()
+        await refresh()
+        await handleFill()
+      } catch (err) {
+        console.warn('JobAppFiller field init error:', err)
+      }
     })()
     backend.element.addEventListener(backend.reactMessageEventId, refresh)
     return () => {

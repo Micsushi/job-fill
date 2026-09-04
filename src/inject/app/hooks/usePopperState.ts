@@ -51,8 +51,8 @@ const handleEscape = (e: KeyboardEvent) => {
 
 export const usePopperState = ({init, backend}: Pick<AppContextType, "init" | "backend">): PopperState => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
-  const anchorRef = useRef(null)
-  const popperRef = useRef(null)
+  const anchorRef = useRef<HTMLElement | null>(null)
+  const popperRef = useRef<HTMLElement | null>(null)
   const isOpen = Boolean(anchorEl)
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false)
   
@@ -60,21 +60,6 @@ export const usePopperState = ({init, backend}: Pick<AppContextType, "init" | "b
     setIsRefreshing(true)
     await init()
     setIsRefreshing(false)
-  }
-
-  const handleClickAway = (e: PointerEvent) => {
-    const { x, y } = e
-    const rects = [,
-      popperRef.current?.getBoundingClientRect(),
-    ]
-    const isInModal = () => e.composedPath().some((el: HTMLElement) => {
-      return el?.classList?.contains("MuiModal-root")
-    })
-    const isInside = isInRect(x, y, rects) || backend.clickIsInFormfield(e) || isInModal()
-    if (!isInside) {
-      document.removeEventListener('click', handleClickAway)
-      close()
-    }
   }
 
   const open = () => {
@@ -85,21 +70,55 @@ export const usePopperState = ({init, backend}: Pick<AppContextType, "init" | "b
     setAnchorEl(null)
   }
 
+  const handleEscape = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      close()
+    }
+  }
+
+  const handleClickAway = (e: PointerEvent) => {
+    const { x, y } = e
+    const popperEl = popperRef.current
+    const anchor = anchorRef.current
+    const target = e.target as Node
+    const path = typeof e.composedPath === 'function' ? e.composedPath() : []
+
+    const isInsidePopper = Boolean(
+      popperEl && (popperEl.contains(target) || isInRect(x, y, [popperEl.getBoundingClientRect()], 5))
+    )
+    const isInsideAnchor = Boolean(
+      anchor && (anchor.contains(target) || isInRect(x, y, [anchor.getBoundingClientRect()], 5))
+    )
+    const isInFormField = backend.clickIsInFormfield(e)
+    const isInModal = path.some((el: any) => el?.classList?.contains?.('MuiModal-root'))
+
+    if (isInsidePopper || isInsideAnchor || isInFormField || isInModal) {
+      return
+    }
+    close()
+  }
+
   useEffect(() => {
     if (isOpen) {
       document.addEventListener('keyup', handleEscape)
-      document.addEventListener('click', handleClickAway)
-    }
-    return () => {
-      document.removeEventListener('keyup', handleEscape)
-      document.removeEventListener('click', handleClickAway)
+      // Use setTimeout to avoid firing on the same click that opened the popper
+      const timer = setTimeout(() => {
+        document.addEventListener('click', handleClickAway)
+      }, 0)
+      return () => {
+        clearTimeout(timer)
+        document.removeEventListener('keyup', handleEscape)
+        document.removeEventListener('click', handleClickAway)
+      }
     }
   }, [isOpen])
 
   const handleToggleButtonClick = (e: MouseEvent<HTMLElement>) => {
+    e.stopPropagation()
     if (!isOpen) {
       open()
-    } else if (e.currentTarget.contains(e.target as Node)) {
+    } else {
       close()
     }
   }

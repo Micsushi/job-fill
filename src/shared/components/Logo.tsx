@@ -11,44 +11,37 @@ const sizes = {
 } as const 
 type Size = keyof typeof sizes
 
-const Logo: FC<{size?: Size}> = ({size = "small"}) => {
+const pixelSizes = {
+  small: 24,
+  medium: 28,
+  large: 36,
+} as const
 
-
+const Logo: FC<{ size?: Size }> = ({ size = 'small' }) => {
+  const px = pixelSizes[size] || 24
   return (
-    <Box>
-      <Paper elevation={6} sx={{ borderRadius: '50%' }}>
-        <Avatar
-          sx={{
-            fontSize: sizes[size],
-            bgcolor: theme.palette.primary.main,
-            width: '1.7em',
-            height: '1.7em',
-          }}
-        >
-          <Typography
-            color={'white'}
-            variant={variant}
-            sx={{ fontWeight: '100', fontSize: '.65em' }}
-          >
-            j
-          </Typography>
-          <Typography
-            color={'white'}
-            variant={variant}
-            sx={{ fontWeight: '500', fontSize: '.75em' }}
-          >
-            a
-          </Typography>
-          <Typography
-            color={'white'}
-            variant={variant}
-            sx={{ fontWeight: '900', fontSize: '.8em' }}
-          >
-            f
-          </Typography>
-        </Avatar>
-      </Paper>
-    </Box>
+    <div
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: `${px}px`,
+        height: `${px}px`,
+        borderRadius: '50%',
+        backgroundColor: '#00897b',
+        color: '#ffffff',
+        fontWeight: 'bold',
+        fontSize: `${Math.round(px * 0.45)}px`,
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        letterSpacing: '0.5px',
+        userSelect: 'none',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
+        flexShrink: 0,
+        lineHeight: 1,
+      }}
+    >
+      jaf
+    </div>
   )
 }
 

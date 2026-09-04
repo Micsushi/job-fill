@@ -47,13 +47,30 @@ export class TextInput extends WorkdayBaseInput<string | null> {
         )
       ) {
         const firstAnswer = answers[0]
-        const reactProps = getReactProps(this.inputElement)
-        this.inputElement.value = firstAnswer.answer
-        if (reactProps.onChange) {
-          reactProps.onChange({ target: this.inputElement })
+        const input = this.inputElement
+        if (!input) return
+        const val = String(firstAnswer.answer ?? '')
+
+        const prototype = Object.getPrototypeOf(input)
+        const prototypeValueSetter = Object.getOwnPropertyDescriptor(
+          prototype,
+          'value'
+        )?.set
+        if (prototypeValueSetter) {
+          prototypeValueSetter.call(input, val)
+        } else {
+          input.value = val
         }
-        if (reactProps.onBlur) {
-          reactProps.onBlur({ target: this.inputElement })
+
+        input.dispatchEvent(new Event('input', { bubbles: true }))
+        input.dispatchEvent(new Event('change', { bubbles: true }))
+
+        const reactProps = getReactProps(input)
+        if (reactProps?.onChange) {
+          reactProps.onChange({ target: input, currentTarget: input })
+        }
+        if (reactProps?.onBlur) {
+          reactProps.onBlur({ target: input, currentTarget: input })
         }
       }
     })

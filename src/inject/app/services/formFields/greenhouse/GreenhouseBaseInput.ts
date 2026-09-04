@@ -1,4 +1,4 @@
-import { createRoot } from 'react-dom/client'
+import { renderWidget } from '../../../App'
 import { BaseFormInput, isRegistered, isVisible } from '../baseFormInput'
 import { getElement, getElements } from '@src/shared/utils/getElements'
 
@@ -48,7 +48,7 @@ export abstract class GreenhouseBaseInput<
         rootElement,
         this.inputDisplayElement()
       )
-      createRoot(rootElement).render(app)
+      renderWidget(rootElement, app)
     }
   }
 }

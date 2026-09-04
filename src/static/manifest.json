@@ -8,6 +8,9 @@
     "default_title": "Autofill Job Applications - JobAppFiller",
     "default_popup": "popup.html"
   },
+  "background": {
+    "service_worker": "background.js"
+  },
 
   "content_scripts": [
     {
@@ -15,9 +18,7 @@
         "contentScript.js"
       ],
       "matches": [
-        "https://*.myworkdayjobs.com/*",
-        "https://*.myworkdaysite.com/*",
-        "https://*.greenhouse.io/*"
+        "<all_urls>"
       ],
       "all_frames": true
     }
@@ -28,15 +29,18 @@
         "inject.js"
       ],
       "matches": [
-        "https://*.myworkdayjobs.com/*",
-        "https://*.myworkdaysite.com/*",
-        "https://*.greenhouse.io/*"
+        "<all_urls>"
       ],
       "all_frames": true
     }
   ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
   "permissions": [
     "storage",
-    "unlimitedStorage"
+    "unlimitedStorage",
+    "activeTab",
+    "scripting"
   ]
 }

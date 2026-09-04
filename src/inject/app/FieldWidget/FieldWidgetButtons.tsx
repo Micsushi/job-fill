@@ -8,12 +8,25 @@ import { MoreInfoButton } from './MoreInfoButton'
 export const FieldWidgetButtons: FC = () => {
   const { moreInfoPopper } = useAppContext()
   return (
-    <Paper elevation={4}>
-      <ButtonGroup ref={moreInfoPopper.anchorRef} size="small">
-        <FillButton />
-        <SaveButton />
-        <MoreInfoButton />
-      </ButtonGroup>
-    </Paper>
+    <div
+      ref={moreInfoPopper.anchorRef as any}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        backgroundColor: '#ffffff',
+        border: '1px solid #cfd8dc',
+        borderRadius: '6px',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.12)',
+        height: '26px',
+        position: 'relative',
+        userSelect: 'none',
+      }}
+    >
+      <FillButton />
+      <div style={{ width: '1px', height: '16px', backgroundColor: '#e0e0e0', flexShrink: 0 }} />
+      <SaveButton />
+      <div style={{ width: '1px', height: '16px', backgroundColor: '#e0e0e0', flexShrink: 0 }} />
+      <MoreInfoButton />
+    </div>
   )
 }

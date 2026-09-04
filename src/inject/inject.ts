@@ -1,6 +1,7 @@
 import { RegisterInputs as workday } from './app/services/formFields/workday'
 import { RegisterInputs as greenhouse } from './app/services/formFields/greenhouse'
 import { RegisterInputs as greenhouseReact } from './app/services/formFields/greenhouseReact'
+import { RegisterInputs as lever } from './app/services/formFields/lever'
 
 type InputSetup = (node: Node) => Promise<void>
 const inputRegistrars: [string, InputSetup][] = [
@@ -9,23 +10,63 @@ const inputRegistrars: [string, InputSetup][] = [
   ['job-boards.greenhouse.io', greenhouseReact],
   ['boards.greenhouse.io', greenhouse],
   ['boards.eu.greenhouse.io', greenhouse],
+  ['lever.co', lever],
 ]
-const getRegisterInput = (domain: string): InputSetup => {
-  return inputRegistrars.find((site) => {
+const getRegisterInput = (domain: string): InputSetup | undefined => {
+  const match = inputRegistrars.find((site) => {
     return domain.endsWith(site[0])
-  })[1]
+  })
+  if (match) return match[1]
+
+  // Fallback detection for ATS forms on custom/arbitrary domains
+  if (document.querySelector('div[data-automation-id*="formField"], div[data-automation-id="workdayApplication"]')) {
+    return workday
+  }
+  if (document.querySelector('.application--container, div#app[data-react-helmet]')) {
+    return greenhouseReact
+  }
+  if (document.querySelector('form#application-form, form.application-form, ul[data-qa="multiple-choice"]')) {
+    return lever
+  }
+  if (document.querySelector('form#application_form, #embedded_job_board_wrapper')) {
+    return greenhouse
+  }
+  return undefined
 }
 
 const run = async () => {
-  const RegisterInputs = getRegisterInput(window.location.host)
-  const observer = new MutationObserver(async (_) => {
+  let RegisterInputs = getRegisterInput(window.location.host)
+  if (RegisterInputs) {
+    const observer = new MutationObserver(async (_) => {
+      RegisterInputs!(document)
+    })
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+    })
     RegisterInputs(document)
+    return
+  }
+
+  // Observe for dynamically rendered ATS forms on arbitrary URLs
+  const fallbackObserver = new MutationObserver(async (_, obs) => {
+    RegisterInputs = getRegisterInput(window.location.host)
+    if (RegisterInputs) {
+      obs.disconnect()
+      const activeObserver = new MutationObserver(async (_) => {
+        RegisterInputs!(document)
+      })
+      activeObserver.observe(document.body, {
+        childList: true,
+        subtree: true,
+      })
+      RegisterInputs(document)
+    }
   })
-  observer.observe(document.body, {
+  fallbackObserver.observe(document.body, {
     childList: true,
     subtree: true,
   })
-  RegisterInputs(document)
 }
 
 /**

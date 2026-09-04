@@ -10,12 +10,6 @@ import { Section } from './Section'
 import { Textarea } from './Textarea'
 import { TextInput } from './TextInput'
 
-/** Not present in job search page */
-const applicationContainerElement = getElement(
-  document,
-  `.//div[@class="application--container"]`
-)
-
 const inputs = [
   TextInput,
   Textarea,
@@ -29,7 +23,11 @@ const inputs = [
 ]
 
 export const RegisterInputs = async (node: Node = document) => {
-  if (applicationContainerElement) {
+  const container = getElement(
+    document,
+    `.//div[contains(@class, "application--container")]`
+  )
+  if (container) {
     await Section.autoDiscover(node)
     Promise.all(inputs.map((i) => i.autoDiscover(node)))
   }

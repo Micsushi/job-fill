@@ -2,25 +2,9 @@ import { createTheme } from "@mui/material";
 import { teal } from "@mui/material/colors";
 import { cloneElement, ReactElement } from "react";
 
-const styleOverrides = {
-  root: {
-    class: "JAF-CUSTOM"
-  }
-}
-
 const baseTheme = createTheme({})
 
 export const theme = createTheme(baseTheme, {
-  components: {
-    MuiButtonBase: { styleOverrides },
-    MuiButtonGroup: { styleOverrides },
-    MuiContainer: { styleOverrides },
-    MuiGrid: { styleOverrides },
-    MuiGrid2: { styleOverrides },
-    MuiPaper: { styleOverrides },
-    MuiTypography: { styleOverrides },
-    MuiAvatar: { styleOverrides },
-  },
   typography: {
     allVariants: {
       color: teal[800],

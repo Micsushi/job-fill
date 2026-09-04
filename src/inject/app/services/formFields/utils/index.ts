@@ -19,14 +19,28 @@ export const fillReactTextInput = (
   value: string,
   config: fillReactTextInputOptions = defaultOptions
 ): void => {
+  if (!input) return
+  const val = String(value ?? '')
+  const prototype = Object.getPrototypeOf(input)
+  const prototypeValueSetter = Object.getOwnPropertyDescriptor(
+    prototype,
+    'value'
+  )?.set
+  if (prototypeValueSetter) {
+    prototypeValueSetter.call(input, val)
+  } else {
+    input.value = val
+  }
+  input.dispatchEvent(new Event('input', { bubbles: true }))
+  input.dispatchEvent(new Event('change', { bubbles: true }))
+
   const reactProps = getReactProps(input)
-  input.value = value
   const eventData = {
     target: input,
     currentTarget: input,
     preventDefault: () => {},
   }
-  reactProps?.[config.eventName](eventData)
+  reactProps?.[config.eventName]?.(eventData)
 }
 
 
