@@ -150,6 +150,36 @@ export const ContextProvider: FC<{
 
   const confirmedNotEmpty = (snapshot: Answer | null): boolean => {
     if (!snapshot || !isEmptyAnswer(snapshot.answer)) return true
+
+    // React re-renders these forms and can swap the field's DOM node out from
+    // under us. This instance would then be reading a detached copy, whose
+    // value stopped changing the moment it left the page -- which looks
+    // exactly like an empty field.
+    const detached = !document.contains(backend.element)
+    // Which control is this instance actually bound to? If it is not the one
+    // on screen, that is the bug, and this says so outright.
+    const probe = backend.element.querySelector(
+      'input, textarea, select'
+    ) as HTMLInputElement | null
+    debugError('empty-save check', {
+      fieldName: backend.fieldName,
+      read: snapshot.answer,
+      detached,
+      fieldType: backend.fieldType,
+      elementClass: backend.element.className,
+      boundControlId: probe?.id,
+      boundControlType: probe?.type,
+      boundControlValue: probe?.value,
+    })
+
+    if (detached) {
+      window.alert(
+        `Job Fill lost track of "${backend.fieldName}" because the page ` +
+          `re-rendered it. Reload the page and try again -- nothing was saved.`
+      )
+      return false
+    }
+
     return window.confirm(
       `"${backend.fieldName}" is empty. Save it as a blank answer anyway?`
     )
