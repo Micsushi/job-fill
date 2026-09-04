@@ -35,6 +35,24 @@ export abstract class GreenhouseReactBaseInput<
   }
 
   /**
+   * The control this field's label points at.
+   *
+   * Taking the first input in the wrapper is not safe: Greenhouse mounts an
+   * intl-tel-input country search box ahead of the real phone input after
+   * hydration, so `.//input` returned a permanently empty search field. The
+   * label's `for` attribute names the control the label belongs to, which is
+   * the only reliable answer.
+   */
+  protected controlFromLabel<T extends HTMLElement>(fallbackXpath: string): T {
+    const forId = this.labelElement?.getAttribute('for')
+    if (forId) {
+      const byId = this.element.querySelector(`[id="${CSS.escape(forId)}"]`)
+      if (byId) return byId as T
+    }
+    return getElement(this.element, fallbackXpath) as T
+  }
+
+  /**
    * Commit a value the control is holding but has not accepted yet.
    *
    * Searchable dropdowns and the phone country picker keep a typed value in

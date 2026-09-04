@@ -14,7 +14,7 @@ export class Textarea extends GreenhouseReactBaseInput<any> {
   }
 
   get inputElement(): HTMLInputElement {
-    return getElement(this.element, './/textarea') as HTMLInputElement
+    return this.controlFromLabel<HTMLInputElement>('.//textarea')
   }
 
   listenForChanges(): void {

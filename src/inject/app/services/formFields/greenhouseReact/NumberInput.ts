@@ -14,7 +14,7 @@ export class NumberInput extends GreenhouseReactBaseInput<any> {
   }
 
   get inputElement(): HTMLInputElement {
-    return getElement(this.element, './/input') as HTMLInputElement
+    return this.controlFromLabel<HTMLInputElement>('.//input')
   }
 
   listenForChanges(): void {
