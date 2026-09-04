@@ -8,8 +8,8 @@ import { MoreInfoButton } from './MoreInfoButton'
 export const FieldWidgetButtons: FC = () => {
   const { moreInfoPopper } = useAppContext()
 
-  // The widget hides itself when the pointer leaves the field. While its own
-  // popup is open that would pull the panel out from under the user, so pin it.
+  // The widget dims when the pointer leaves the field. Keep it at full
+  // strength while its own popup is open.
   useEffect(() => {
     const widget = (
       moreInfoPopper.anchorRef as React.MutableRefObject<HTMLElement | null>
@@ -18,7 +18,6 @@ export const FieldWidgetButtons: FC = () => {
     widget.setAttribute('data-jaf-pinned', String(moreInfoPopper.isOpen))
     if (moreInfoPopper.isOpen) {
       widget.style.opacity = '1'
-      widget.style.pointerEvents = 'auto'
     }
   }, [moreInfoPopper.isOpen])
 

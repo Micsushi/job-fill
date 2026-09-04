@@ -1,6 +1,6 @@
-# Job App Filler 2.1.2
+# Job Fill 2.1.2
 
-Job App Filler is a chrome extension that autofills fields properly
+Job Fill is a chrome extension that autofills fields properly
 on tedious job sites such as workday, icims, etc. 
 
 [Download](https://chromewebstore.google.com/detail/job-app-filler/gdballabidaicjchgomokfmalodbkeoc)

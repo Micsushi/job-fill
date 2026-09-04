@@ -1,3 +1,5 @@
+// Deliberately not renamed along with the product. This is a storage key:
+// changing it orphans every mirrored record already on disk.
 const DB_NAME = 'JobAppFillerPermanentDB'
 const DB_VERSION = 1
 const ANSWERS_STORE = 'answers'

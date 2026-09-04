@@ -1,7 +1,7 @@
 {
-  "name": "job_app_filler",
+  "name": "job-fill",
   "version": "1.0.2",
-  "description": "Elevated Autofill for those pesky job application sites.",
+  "description": "Job Fill - elevated autofill for those pesky job application sites.",
   "main": "index.js",
   "scripts": {
     "start": "webpack --watch --progress --config webpack.dev.js",

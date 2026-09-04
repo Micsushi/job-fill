@@ -39,28 +39,25 @@ export abstract class GreenhouseReactBaseInput<
       zIndex: '20',
       display: 'inline-flex',
       alignItems: 'center',
-      opacity: '0',
-      pointerEvents: 'none',
+      // Always visible, but dialled back until the field is in use so it
+      // reads as chrome rather than content.
+      opacity: '0.72',
       transition: 'opacity 120ms ease-in-out',
     } as Partial<CSSStyleDeclaration>)
     host.appendChild(rootElement)
 
-    // Stay out of the way until the field is actually being used.
-    const show = () => {
+    const emphasise = () => {
       rootElement.style.opacity = '1'
-      rootElement.style.pointerEvents = 'auto'
     }
-    const hide = () => {
-      // Don't yank the widget away while its own popup is open.
+    const relax = () => {
       if (rootElement.contains(document.activeElement)) return
       if (rootElement.getAttribute('data-jaf-pinned') === 'true') return
-      rootElement.style.opacity = '0'
-      rootElement.style.pointerEvents = 'none'
+      rootElement.style.opacity = '0.72'
     }
-    host.addEventListener('mouseenter', show)
-    host.addEventListener('focusin', show)
-    host.addEventListener('mouseleave', hide)
-    host.addEventListener('focusout', hide)
+    host.addEventListener('mouseenter', emphasise)
+    host.addEventListener('focusin', emphasise)
+    host.addEventListener('mouseleave', relax)
+    host.addEventListener('focusout', relax)
 
     renderWidget(rootElement, app)
   }

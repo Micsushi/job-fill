@@ -70,7 +70,7 @@ export const ContextProvider: FC<{
         await refresh()
         await handleFill()
       } catch (err) {
-        console.warn('JobAppFiller field init error:', err)
+        console.warn('Job Fill field init error:', err)
       }
     })()
     backend.element.addEventListener(backend.reactMessageEventId, refresh)

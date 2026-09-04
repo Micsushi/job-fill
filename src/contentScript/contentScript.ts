@@ -44,6 +44,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'SHOW_WHATS_NEW') {
     document.dispatchEvent(new CustomEvent(EVENT_LISTENER_ID))
   }
+  // Relay page wide fill/clear from the popup. The field instances live in
+  // the page's own context, which the popup cannot reach directly.
+  if (message.type === 'JAF_PAGE_ACTION') {
+    document.dispatchEvent(
+      new CustomEvent('jaf-page-action', { detail: message.action })
+    )
+    sendResponse({ ok: true })
+  }
 })
 
 const run = async () => {

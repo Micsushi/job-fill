@@ -197,7 +197,7 @@ export abstract class BaseFormInput<AnswerType> {
       const response = await contentScriptAPI.send('saveAnswer', answer)
       return response.data
     } catch (err) {
-      console.warn('JobAppFiller: Failed to save answer', err)
+      console.warn('Job Fill: Failed to save answer', err)
       return answer
     }
   }
@@ -207,7 +207,7 @@ export abstract class BaseFormInput<AnswerType> {
       const res = await contentScriptAPI.send('deleteAnswer', id)
       return Boolean(res.ok)
     } catch (err) {
-      console.warn('JobAppFiller: Failed to delete answer', err)
+      console.warn('Job Fill: Failed to delete answer', err)
       return false
     }
   }
@@ -223,7 +223,7 @@ export abstract class BaseFormInput<AnswerType> {
         return []
       }
     } catch (err) {
-      console.warn('JobAppFiller: Failed to get answer', err)
+      console.warn('Job Fill: Failed to get answer', err)
       return []
     }
   }

@@ -150,7 +150,7 @@ export const DatabaseManager: FC<DatabaseManagerProps> = ({
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `job_app_filler_db_${new Date().toISOString().slice(0, 10)}.json`
+    a.download = `job_fill_db_${new Date().toISOString().slice(0, 10)}.json`
     a.click()
     // Revoking synchronously can abort a download that hasn't started,
     // and the popup may close first.

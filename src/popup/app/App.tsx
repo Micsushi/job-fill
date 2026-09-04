@@ -32,6 +32,8 @@ import {
   StorageIcon,
   FileDownloadIcon,
   UploadFileIcon,
+  AutoFixHighIcon,
+  ClearIcon,
   FiberManualRecordIcon,
 } from '@src/shared/utils/icons'
 import { LogoTitleBar } from '@src/shared/components/LogoTitleBar'
@@ -49,6 +51,31 @@ export const App: FC<{}> = () => {
   const [pendingImportJson, setPendingImportJson] = useState<any>(null)
   const [importFileName, setImportFileName] = useState<string>('')
   const [importMode, setImportMode] = useState<'merge' | 'replace'>('merge')
+
+  /**
+   * Page wide fill/clear. Lives here rather than as an on-page toolbar so we
+   * never paint anything over the job site itself.
+   */
+  const sendPageAction = (action: 'fill' | 'clear') => {
+    if (action === 'clear') {
+      const ok = window.confirm(
+        'Clear every field Job Fill manages on the current page?'
+      )
+      if (!ok) return
+    }
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const tabId = tabs[0]?.id
+      if (tabId === undefined) return
+      chrome.tabs
+        .sendMessage(tabId, { type: 'JAF_PAGE_ACTION', action })
+        .then(() => {
+          showNotify(action === 'fill' ? 'Filling page...' : 'Clearing page...')
+        })
+        .catch(() => {
+          showNotify('No supported job form on this tab.')
+        })
+    })
+  }
 
   const refreshCount = async () => {
     try {
@@ -93,7 +120,7 @@ export const App: FC<{}> = () => {
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `job_app_filler_db_${new Date().toISOString().slice(0, 10)}.json`
+      a.download = `job_fill_db_${new Date().toISOString().slice(0, 10)}.json`
       a.click()
       // Revoking synchronously can abort a download that hasn't started,
       // and the popup may close first.
@@ -137,7 +164,7 @@ export const App: FC<{}> = () => {
   return (
     <ThemeProvider theme={theme}>
       <Box pb={'0.5em'}>
-        <LogoTitleBar>Job App Filler</LogoTitleBar>
+        <LogoTitleBar>Job Fill</LogoTitleBar>
       </Box>
       <Box component={'main'}>
         <Container sx={{ my: 1.5, px: 2 }}>
@@ -171,6 +198,28 @@ export const App: FC<{}> = () => {
               endIcon={<OpenInNewIcon fontSize="small" />}
             >
               Tutorial
+            </Button>
+          </Stack>
+
+          {/* Whole page actions */}
+          <Stack direction={'row'} spacing={1} sx={{ mb: 1.5 }}>
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<AutoFixHighIcon />}
+              onClick={() => sendPageAction('fill')}
+              sx={{ flex: 1 }}
+            >
+              Fill Page
+            </Button>
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<ClearIcon />}
+              onClick={() => sendPageAction('clear')}
+              sx={{ flex: 1 }}
+            >
+              Clear Page
             </Button>
           </Stack>
 

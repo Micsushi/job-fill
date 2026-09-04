@@ -30,7 +30,7 @@ const Logo: FC<{ size?: Size }> = ({ size = 'small' }) => {
         userSelect: 'none',
       }}
     >
-      Job
+      Job Fill
     </span>
   )
 }
