@@ -19,8 +19,8 @@ const Main: FC = () => {
         style={{
         display: 'inline-flex',
         alignItems: 'center',
-        margin: '2px 0 4px 0',
-        gap: '8px',
+        margin: '0',
+        gap: '6px',
         lineHeight: 1,
         verticalAlign: 'middle',
         }}

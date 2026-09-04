@@ -1,20 +1,21 @@
 import { AnswerValueSingleFileUpload } from "../../../MoreInfoPopup/AnswerDisplay/AnswerValueDisplay/AnswerValueSingleFileUpload";
 import { sleep } from "@src/shared/utils/async";
 import fieldFillerQueue from "@src/shared/utils/fieldFillerQueue";
-import { localStorageToFile } from "@src/shared/utils/file";
+import { fileToLocalStorage, localStorageToFile } from "@src/shared/utils/file";
 import { getElement } from "@src/shared/utils/getElements";
 import { AnswerValueMethods, } from "../baseFormInput";
 import { getReactProps } from "../utils";
 import { GreenhouseReactBaseInput } from "./GreenhouseReactBaseInput";
 import { xpaths } from "./xpaths";
+import { Answer } from "@src/shared/utils/types";
 import { saveButtonClickHandlers } from "../../../hooks/saveButtonClickHandlers";
 
 
 export class File extends GreenhouseReactBaseInput<any> {
   static XPATH = xpaths.FILE
   fieldType = 'SingleFileUpload'
-  public saveButtonClickHandler = saveButtonClickHandlers.withNotice
-  fieldNotice = "To save and autofill files, upload them in the 'Answers' section below."
+  public saveButtonClickHandler = saveButtonClickHandlers.fileAware
+  fieldNotice = "Attach a file here and hit save, or upload one in the 'Answers' section below."
   fieldNoticeLink = {
     display: "See How",
     url: "https://www.youtube.com/watch?v=JYMATq9siIY&t=134s"
@@ -30,6 +31,28 @@ export class File extends GreenhouseReactBaseInput<any> {
       `.//div[contains(@class, "label")]`
     )
   }
+
+  /**
+   * The File object the user last attached, captured at selection time.
+   * Reading it back off the input later is unreliable: Greenhouse is a
+   * controlled component and may reset the native input after handling it.
+   */
+  private capturedFile: globalThis.File | null = null
+
+  /**
+   * Capture whatever is already attached to the form field, so the save
+   * button can store a resume without the user re-uploading it in the
+   * answers panel first. Returns null when the field is empty.
+   */
+  async fieldSnapshotForSave(): Promise<Answer | null> {
+    const file = this.capturedFile || this.inputElement?.files?.[0] || null
+    if (!file) return null
+    return {
+      path: this.path,
+      answer: await fileToLocalStorage(file),
+    }
+  }
+
   listenForChanges(): void {
     const observer = new MutationObserver((mutations: MutationRecord[]) => {
       const XPATH = `self::*[starts-with(@class, "file-upload__filename")]`

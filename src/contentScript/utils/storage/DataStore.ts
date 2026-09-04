@@ -9,7 +9,11 @@ import {
 export const convert106To1010 = (
   answer106: Answer
 ): NewAnswer | SavedAnswer => {
-  const answer1010 = { answer: answer106.answer, ...answer106.path }
+  // `page` is the job posting title. Keeping it would make every answer
+  // posting-specific: the same value saved on a second job would be stored
+  // again instead of matching, and the store would grow without bound.
+  const { page, ...path } = answer106.path || ({} as any)
+  const answer1010 = { answer: answer106.answer, ...path }
   const { matchType, id } = answer106
   if (id !== undefined) {
     ;(answer1010 as SavedAnswer).id = id

@@ -11,6 +11,7 @@ import React, {
 import { BaseFormInput } from './services/formFields/baseFormInput'
 import { EditableAnswerState } from './hooks/useEditableAnswerState'
 import { PopperState, usePopperState } from './hooks/usePopperState'
+import { contentScriptAPI } from './services/contentScriptApi'
 
 export type FillButtonState = {
   isDisabled: boolean
@@ -20,7 +21,12 @@ export type FillButtonState = {
 
 export type SaveButtonState = {
   showSuccessBadge: boolean
+  /** True once this field has at least one stored answer. */
+  hasExistingAnswers: boolean
+  /** Store the current value alongside whatever is already saved. */
   clickHandler: () => void
+  /** Drop every stored answer for this field and keep only the current value. */
+  replaceHandler: () => void
 }
 
 export type LocalAnswer = [string, Boolean]
@@ -105,6 +111,59 @@ export const ContextProvider: FC<{
   }
   const {saveButtonClickHandler} = backend
   const moreInfoPopper = usePopperState({init, backend})
+
+  /** Human readable form of a stored answer, for the replace confirmation. */
+  const describe = (value: any): string => {
+    if (value === null || value === undefined || value === '') return '(empty)'
+    if (typeof value === 'object') {
+      return value.name || JSON.stringify(value)
+    }
+    return String(value)
+  }
+
+  const handleSaveAsExtra = async () => {
+    const snapshot = await backend.fieldSnapshotForSave()
+    saveButtonClickHandler(snapshot, {
+      moreInfoPopper,
+      init,
+      editableAnswerState,
+      backend,
+    })
+  }
+
+  /**
+   * Replace every stored answer for this field with the current value.
+   * Destructive, so the confirmation spells out exactly what is being dropped.
+   */
+  const handleReplaceAll = async () => {
+    const snapshot = await backend.fieldSnapshotForSave()
+    if (!snapshot) {
+      moreInfoPopper.open()
+      return
+    }
+    const existing = editableAnswerState.answers
+    const confirmed = window.confirm(
+      [
+        `Replace every saved answer for "${backend.fieldName}"?`,
+        '',
+        `These ${existing.length} saved answer(s) will be deleted:`,
+        ...existing.map((a) => `  - ${describe(a.originalAnswer.answer)}`),
+        '',
+        'and replaced with:',
+        `  - ${describe(snapshot.answer)}`,
+      ].join('\n')
+    )
+    if (!confirmed) return
+
+    for (const answer of existing) {
+      const id = answer.originalAnswer.id
+      if (typeof id === 'number') {
+        await backend.deleteAnswer(id)
+      }
+    }
+    await contentScriptAPI.send('addAnswer', snapshot)
+    await init()
+  }
   const value: AppContextType = {
     backend,
     refresh,
@@ -125,14 +184,9 @@ export const ContextProvider: FC<{
     },
     saveButton: {
       showSuccessBadge: editableAnswerState.answers.length > 0,
-      clickHandler: () => {
-        saveButtonClickHandler(backend.fieldSnapshot, {
-          moreInfoPopper,
-          init,
-          editableAnswerState,
-          backend,
-        })
-      },
+      hasExistingAnswers: editableAnswerState.answers.length > 0,
+      clickHandler: handleSaveAsExtra,
+      replaceHandler: handleReplaceAll,
     },
   }
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>

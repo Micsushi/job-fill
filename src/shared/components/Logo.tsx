@@ -1,47 +1,37 @@
-import { Avatar, Box, Paper, Typography } from '@mui/material'
 import React, { FC } from 'react'
-import { theme } from '../utils/react'
-
-const variant = 'body2'
 
 const sizes = {
-  small: "1.25rem",
-  medium: "1.5rem",
-  large: "2.25rem"
-} as const 
+  small: '11px',
+  medium: '14px',
+  large: '20px',
+} as const
 type Size = keyof typeof sizes
 
-const pixelSizes = {
-  small: 24,
-  medium: 28,
-  large: 36,
-} as const
+const TEAL = '#00897b'
 
+/**
+ * Wordmark badge. Plain DOM rather than MUI so it renders identically whether
+ * or not the host page has let our stylesheet survive.
+ */
 const Logo: FC<{ size?: Size }> = ({ size = 'small' }) => {
-  const px = pixelSizes[size] || 24
   return (
-    <div
+    <span
       style={{
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        width: `${px}px`,
-        height: `${px}px`,
-        borderRadius: '50%',
-        backgroundColor: '#00897b',
+        backgroundColor: TEAL,
         color: '#ffffff',
-        fontWeight: 'bold',
-        fontSize: `${Math.round(px * 0.45)}px`,
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        letterSpacing: '0.5px',
+        borderRadius: '6px',
+        padding: '0.28em 0.55em',
+        font: `700 ${sizes[size]}/1 system-ui, -apple-system, "Segoe UI", sans-serif`,
+        letterSpacing: '.02em',
+        whiteSpace: 'nowrap',
         userSelect: 'none',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
-        flexShrink: 0,
-        lineHeight: 1,
       }}
     >
-      jaf
-    </div>
+      Job
+    </span>
   )
 }
 

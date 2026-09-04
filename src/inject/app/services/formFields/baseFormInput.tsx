@@ -21,6 +21,22 @@ export function isRegistered(el: HTMLElement): boolean {
   return el.hasAttribute('job-app-filler')
 }
 
+/**
+ * Every field that has been registered on this page, so page level actions
+ * (fill everything / clear everything) have something to iterate over.
+ * Entries whose element has left the DOM are dropped on read.
+ */
+const registry = new Set<BaseFormInput<any>>()
+
+export function registeredInputs(): BaseFormInput<any>[] {
+  for (const input of registry) {
+    if (!document.contains(input.element)) {
+      registry.delete(input)
+    }
+  }
+  return Array.from(registry)
+}
+
 export function isVisible(el: HTMLElement): boolean {
   return el.getBoundingClientRect().height > 0
 }
@@ -85,6 +101,7 @@ export abstract class BaseFormInput<AnswerType> {
     /** prevents the element from being registered twice */
     this.element.setAttribute('job-app-filler', this.uuid)
     this.listenForChanges()
+    registry.add(this)
     this.attachReactApp(<App backend={this} />, element)
   }
 
@@ -166,6 +183,15 @@ export abstract class BaseFormInput<AnswerType> {
     }
   }
 
+  /**
+   * What the save buttons should store. Defaults to whatever is typed in the
+   * field. Field types whose value isn't readable as plain text (file uploads)
+   * override this, and return null when there is nothing to capture.
+   */
+  async fieldSnapshotForSave(): Promise<Answer | null> {
+    return this.fieldSnapshot
+  }
+
   async save(answer: Answer): Promise<Answer> {
     try {
       const response = await contentScriptAPI.send('saveAnswer', answer)
@@ -216,4 +242,11 @@ export abstract class BaseFormInput<AnswerType> {
    * for most fields it's enough to put the actual filling logic in the `fillField` method.
    */
   abstract fill(): Promise<void>
+
+  /**
+   * Reset the field to empty. Overridden per platform; the default is a no-op
+   * so a field type that has no sensible "empty" is simply skipped by
+   * page level clearing.
+   */
+  async clear(): Promise<void> {}
 }

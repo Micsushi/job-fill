@@ -1,4 +1,4 @@
-import React, { FC } from 'react'
+import React, { FC, useEffect } from 'react'
 import { ButtonGroup, Paper } from '@mui/material'
 import { useAppContext } from '../AppContext'
 import { FillButton } from './FillButton'
@@ -7,6 +7,21 @@ import { MoreInfoButton } from './MoreInfoButton'
 
 export const FieldWidgetButtons: FC = () => {
   const { moreInfoPopper } = useAppContext()
+
+  // The widget hides itself when the pointer leaves the field. While its own
+  // popup is open that would pull the panel out from under the user, so pin it.
+  useEffect(() => {
+    const widget = (
+      moreInfoPopper.anchorRef as React.MutableRefObject<HTMLElement | null>
+    ).current?.closest('.jaf-widget') as HTMLElement | null
+    if (!widget) return
+    widget.setAttribute('data-jaf-pinned', String(moreInfoPopper.isOpen))
+    if (moreInfoPopper.isOpen) {
+      widget.style.opacity = '1'
+      widget.style.pointerEvents = 'auto'
+    }
+  }, [moreInfoPopper.isOpen])
+
   return (
     <div
       ref={moreInfoPopper.anchorRef as any}

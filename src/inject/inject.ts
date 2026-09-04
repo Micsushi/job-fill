@@ -2,6 +2,7 @@ import { RegisterInputs as workday } from './app/services/formFields/workday'
 import { RegisterInputs as greenhouse } from './app/services/formFields/greenhouse'
 import { RegisterInputs as greenhouseReact } from './app/services/formFields/greenhouseReact'
 import { RegisterInputs as lever } from './app/services/formFields/lever'
+import { ensurePageToolbar } from './pageToolbar'
 
 type InputSetup = (node: Node) => Promise<void>
 const inputRegistrars: [string, InputSetup][] = [
@@ -38,13 +39,15 @@ const run = async () => {
   let RegisterInputs = getRegisterInput(window.location.host)
   if (RegisterInputs) {
     const observer = new MutationObserver(async (_) => {
-      RegisterInputs!(document)
+      await RegisterInputs!(document)
+      ensurePageToolbar()
     })
     observer.observe(document.body, {
       childList: true,
       subtree: true,
     })
-    RegisterInputs(document)
+    await RegisterInputs(document)
+    ensurePageToolbar()
     return
   }
 
@@ -54,13 +57,15 @@ const run = async () => {
     if (RegisterInputs) {
       obs.disconnect()
       const activeObserver = new MutationObserver(async (_) => {
-        RegisterInputs!(document)
+        await RegisterInputs!(document)
+        ensurePageToolbar()
       })
       activeObserver.observe(document.body, {
         childList: true,
         subtree: true,
       })
-      RegisterInputs(document)
+      await RegisterInputs(document)
+      ensurePageToolbar()
     }
   })
   fallbackObserver.observe(document.body, {

@@ -1,7 +1,9 @@
 export const xpaths = {
+  // Greenhouse uses type="tel" for phone and type="email" for some boards.
+  // They live in the same text-input-wrapper as a plain text field.
   TEXT_INPUT: [
     `.//div[@class="text-input-wrapper"]`,
-    `[.//input[@type="text"]]`,
+    `[.//input[@type="text" or @type="tel" or @type="email" or @type="url"]]`,
   ].join(''),
 
   NUMBER_INPUT: [

@@ -3,7 +3,8 @@ import { getElement } from '@src/shared/utils/getElements'
 import { AnswerValueMethods } from '../baseFormInput'
 import { GreenhouseBaseInput } from './GreenhouseBaseInput'
 import { xpaths } from './xpaths'
-import { LocalStorageFile, localStorageToFile } from '@src/shared/utils/file'
+import { fileToLocalStorage, LocalStorageFile, localStorageToFile } from '@src/shared/utils/file'
+import { Answer } from '@src/shared/utils/types'
 import fieldFillerQueue from '@src/shared/utils/fieldFillerQueue'
 import { dispatchFileDragEvent } from '@src/shared/utils/fileUploadHelpers'
 import { saveButtonClickHandlers } from '../../../hooks/saveButtonClickHandlers'
@@ -12,7 +13,7 @@ import { saveButtonClickHandlers } from '../../../hooks/saveButtonClickHandlers'
 export class File extends GreenhouseBaseInput<any> {
   static XPATH = xpaths.SINGLE_FILE_UPLOAD
   fieldType = 'SingleFileUpload'
-  public saveButtonClickHandler = saveButtonClickHandlers.withNotice
+  public saveButtonClickHandler = saveButtonClickHandlers.fileAware
   fieldNotice =
     "To save and autofill a file, upload it in the 'Answers' section below."
   fieldNoticeLink = {
@@ -24,6 +25,28 @@ export class File extends GreenhouseBaseInput<any> {
       ...super.answerValue,
       displayComponent: AnswerValueSingleFileUpload,
     } as AnswerValueMethods
+  }
+
+
+  /**
+   * The File object the user last attached, captured at selection time.
+   * Reading it back off the input later is unreliable: Greenhouse is a
+   * controlled component and may reset the native input after handling it.
+   */
+  private capturedFile: globalThis.File | null = null
+
+  /**
+   * Capture whatever is already attached to the form field, so the save
+   * button can store a resume without the user re-uploading it in the
+   * answers panel first. Returns null when the field is empty.
+   */
+  async fieldSnapshotForSave(): Promise<Answer | null> {
+    const file = this.capturedFile || this.inputElement()?.files?.[0] || null
+    if (!file) return null
+    return {
+      path: this.path,
+      answer: await fileToLocalStorage(file),
+    }
   }
 
   listenForChanges(): void {
