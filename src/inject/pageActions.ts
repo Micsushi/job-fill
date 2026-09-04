@@ -1,4 +1,8 @@
 import { registeredInputs } from './app/services/formFields/baseFormInput'
+import {
+  PAGE_ACTION_EVENT,
+  PageAction,
+} from '@src/shared/utils/pageActions'
 
 /**
  * Page wide fill/clear, driven from the extension popup rather than an
@@ -8,10 +12,6 @@ import { registeredInputs } from './app/services/formFields/baseFormInput'
  * in the page's own context, so the content script relays a DOM event that
  * this listener picks up.
  */
-export const PAGE_ACTION_EVENT = 'jaf-page-action'
-
-export type PageAction = 'fill' | 'clear'
-
 export type PageActionResult = {
   total: number
   failed: number

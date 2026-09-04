@@ -1,6 +1,7 @@
 import { Server } from '@src/shared/utils/crossContextCommunication/server'
 import { FieldPath, Answer } from '@src/shared/utils/types'
 import { EVENT_LISTENER_ID, loadApp } from './app/App'
+import { PAGE_ACTION_EVENT } from '@src/shared/utils/pageActions'
 import { answers1010, migrate1010 } from './utils/storage/Answers1010'
 import { convert106To1010, convert1010To106 } from './utils/storage/DataStore'
 import { SavedAnswer } from './utils/storage/DataStoreTypes'
@@ -48,7 +49,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // the page's own context, which the popup cannot reach directly.
   if (message.type === 'JAF_PAGE_ACTION') {
     document.dispatchEvent(
-      new CustomEvent('jaf-page-action', { detail: message.action })
+      new CustomEvent(PAGE_ACTION_EVENT, { detail: message.action })
     )
     sendResponse({ ok: true })
   }
