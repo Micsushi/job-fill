@@ -2,6 +2,7 @@ import { renderWidget } from '../../../App'
 import { getElement } from '@src/shared/utils/getElements'
 import { BaseFormInput } from '../baseFormInput'
 import { clearFormControls } from '../utils'
+import { anchorWidget, widgetAnchorFor } from '../utils/widgetAnchor'
 
 export abstract class WorkdayBaseInput<
   AnswerType
@@ -11,10 +12,9 @@ export abstract class WorkdayBaseInput<
     app: React.ReactNode,
     inputContainer: HTMLElement
   ) {
-    // cant just append the react app to the root element...
-    // it makes the element disappear
     const rootElement = document.createElement('div')
-    inputContainer.insertBefore(rootElement, inputContainer.lastChild)
+    rootElement.classList.add('jaf-widget')
+    anchorWidget(rootElement, widgetAnchorFor(this.labelElement, this.element))
     renderWidget(rootElement, app)
   }
 

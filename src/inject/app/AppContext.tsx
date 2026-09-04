@@ -12,6 +12,7 @@ import { BaseFormInput } from './services/formFields/baseFormInput'
 import { EditableAnswerState } from './hooks/useEditableAnswerState'
 import { PopperState, usePopperState } from './hooks/usePopperState'
 import { contentScriptAPI } from './services/contentScriptApi'
+import { debugError, debugField } from '@src/shared/utils/debug'
 
 export type FillButtonState = {
   isDisabled: boolean
@@ -68,9 +69,19 @@ export const ContextProvider: FC<{
       try {
         await editableAnswerState.init()
         await refresh()
+        const before = backend.currentValue()
         await handleFill()
+        const after = backend.currentValue()
+        debugField(backend.fieldName || '(no label)', {
+          fieldType: backend.fieldType,
+          section: backend.section || '(none)',
+          savedAnswers: editableAnswerState.answers.length,
+          valueBefore: before,
+          valueAfter: after,
+          changed: before !== after,
+        })
       } catch (err) {
-        console.warn('Job Fill field init error:', err)
+        debugError(`init failed for "${backend.fieldName}"`, err)
       }
     })()
     backend.element.addEventListener(backend.reactMessageEventId, refresh)
@@ -105,6 +116,10 @@ export const ContextProvider: FC<{
     try {
       await backend.fill()
       await refresh()
+    } catch (err) {
+      // Previously this rejected into the caller and stopped the rest of a
+      // page level fill. Report it and carry on to the next field.
+      debugError(`fill failed for "${backend.fieldName}"`, err)
     } finally {
       setFillButtonDisabled(false)
     }

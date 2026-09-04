@@ -1,4 +1,5 @@
 import { renderWidget } from '../../../App'
+import { anchorWidget, widgetAnchorFor } from '../utils/widgetAnchor'
 import { BaseFormInput, isRegistered, isVisible } from '../baseFormInput'
 import { getElement, getElements } from '@src/shared/utils/getElements'
 
@@ -42,13 +43,8 @@ export abstract class GreenhouseBaseInput<
    */
   attachReactApp(app: React.ReactNode, inputContainer: HTMLElement) {
     const rootElement = document.createElement('div')
-    rootElement.classList.add("jaf-widget")
-    if (this.inputDisplayElement) {
-      this.inputDisplayElement()?.parentElement.insertBefore(
-        rootElement,
-        this.inputDisplayElement()
-      )
-      renderWidget(rootElement, app)
-    }
+    rootElement.classList.add('jaf-widget')
+    anchorWidget(rootElement, widgetAnchorFor(this.labelElement, this.element))
+    renderWidget(rootElement, app)
   }
 }

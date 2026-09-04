@@ -3,6 +3,7 @@ import { RegisterInputs as greenhouse } from './app/services/formFields/greenhou
 import { RegisterInputs as greenhouseReact } from './app/services/formFields/greenhouseReact'
 import { RegisterInputs as lever } from './app/services/formFields/lever'
 import { listenForPageActions } from './pageActions'
+import { debugEnabled, debugLog } from '@src/shared/utils/debug'
 
 type InputSetup = (node: Node) => Promise<void>
 const inputRegistrars: [string, InputSetup][] = [
@@ -41,6 +42,13 @@ const getRegisterInput = (domain: string): InputSetup | undefined => {
 
 const run = async () => {
   listenForPageActions()
+  if (debugEnabled()) {
+    debugLog(`diagnostics on for ${window.location.host}`)
+  } else {
+    console.log(
+      '[Job Fill] set localStorage.jobFillDebug = "1" and reload for field diagnostics'
+    )
+  }
   let RegisterInputs = getRegisterInput(window.location.host)
   if (RegisterInputs) {
     const observer = new MutationObserver(async (_) => {

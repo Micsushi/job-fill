@@ -2,6 +2,7 @@ import { renderWidget } from '../../../App'
 import { BaseFormInput } from '../baseFormInput'
 import { getElement } from '@src/shared/utils/getElements'
 import { clearFormControls } from '../utils'
+import { anchorWidget, widgetAnchorFor } from '../utils/widgetAnchor'
 
 export abstract class LeverBaseInput<AnswerType> extends BaseFormInput<AnswerType> {
   get labelDisplayElement(): HTMLElement {
@@ -30,19 +31,7 @@ export abstract class LeverBaseInput<AnswerType> extends BaseFormInput<AnswerTyp
   attachReactApp(app: React.ReactNode, inputContainer: HTMLElement): void {
     const rootElement = document.createElement('div')
     rootElement.classList.add('jaf-widget')
-    rootElement.style.display = 'inline-flex'
-    rootElement.style.alignItems = 'center'
-    rootElement.style.margin = '4px 0'
-
-    const field = getElement(
-      this.element,
-      './/*[contains(@class, "application-field")]'
-    )
-    if (field) {
-      field.insertAdjacentElement('beforebegin', rootElement)
-    } else {
-      this.element.insertAdjacentElement('afterbegin', rootElement)
-    }
+    anchorWidget(rootElement, widgetAnchorFor(this.labelElement, this.element))
     renderWidget(rootElement, app)
   }
 

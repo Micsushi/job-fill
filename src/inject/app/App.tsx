@@ -7,7 +7,6 @@ import { ContextProvider } from './AppContext'
 
 import { BaseFormInput } from './services/formFields/baseFormInput'
 import { FieldWidgetButtons } from './FieldWidget/FieldWidgetButtons'
-import Logo from '@src/shared/components/Logo'
 
 import createCache from '@emotion/cache'
 import { CacheProvider } from '@emotion/react'
@@ -20,12 +19,11 @@ const Main: FC = () => {
         display: 'inline-flex',
         alignItems: 'center',
         margin: '0',
-        gap: '6px',
+        gap: '2px',
         lineHeight: 1,
         verticalAlign: 'middle',
         }}
       >
-        <Logo />
         <FieldWidgetButtons />
       </div>
     </ThemeProvider>

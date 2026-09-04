@@ -9,6 +9,7 @@ import { App } from '../../App'
 import { SaveButtonClickHndler, saveButtonClickHandlers } from '../../hooks/saveButtonClickHandlers'
 import { EditableAnswer, useEditableAnswerState } from '../../hooks/useEditableAnswerState'
 import { contentScriptAPI } from '../contentScriptApi'
+import { debugError, debugLog } from '@src/shared/utils/debug'
 
 export type AnswerValueMethods = {
   displayComponent: FC<{ id: number }>
@@ -217,13 +218,14 @@ export abstract class BaseFormInput<AnswerType> {
       path = path || this.path
       const res = await contentScriptAPI.send('getAnswer', path)
       if (res.ok) {
+        debugLog('lookup', path, `-> ${res.data.length} answer(s)`)
         return res.data
       } else {
-        console.log(res, this.path)
+        debugError('lookup rejected', path, res)
         return []
       }
     } catch (err) {
-      console.warn('Job Fill: Failed to get answer', err)
+      debugError('lookup failed', path, err)
       return []
     }
   }
