@@ -32,6 +32,11 @@ export const convert1010To106 = (
   return { answer, id, matchType, path: { section, fieldName, fieldType } }
 }
 
+/**
+ * Bump when a new one-off repair is added, so it runs once for existing users.
+ */
+const MAINTENANCE_VERSION = 1
+
 const tsIndex = () => {
   const index = elasticlunr<{ fieldName: string; id: number }>()
     .addField('fieldName')
@@ -432,6 +437,35 @@ export class DataStore {
       })
       this.listenerAttached = true
     }
+
+    await this.runMaintenanceIfNeeded()
+  }
+
+  /**
+   * Repairs that must happen once per store, not once per click.
+   *
+   * Older versions keyed answers on the job posting title, so stores built by
+   * them carry duplicates. Running this on load means a user only has to
+   * reload to get a clean store, rather than knowing to press a button.
+   */
+  private async runMaintenanceIfNeeded(): Promise<void> {
+    const key = `${this.name}_maintenanceVersion`
+    try {
+      const stored = await chrome.storage.local.get(key)
+      if ((stored[key] || 0) >= MAINTENANCE_VERSION) return
+
+      const { duplicatesRemoved, recordsRepaired } = await this.cleanUp()
+      await chrome.storage.local.set({ [key]: MAINTENANCE_VERSION })
+
+      if (duplicatesRemoved || recordsRepaired) {
+        console.info(
+          `Job Fill: tidied saved answers (${duplicatesRemoved} duplicate(s) removed, ${recordsRepaired} repaired).`
+        )
+      }
+    } catch (err) {
+      // Never block loading over a tidy-up.
+      console.warn('Job Fill: maintenance skipped', err)
+    }
   }
 
   exportDb() {
@@ -544,7 +578,7 @@ export class DataStore {
         loose.section || '',
         loose.fieldType || '',
         JSON.stringify(loose.answer ?? null),
-      ].join(' ')
+      ].join(String.fromCharCode(0))
 
       if (seen.has(key)) {
         duplicates.push(loose.id)

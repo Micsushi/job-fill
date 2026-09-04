@@ -66,14 +66,3 @@ export const renderWidget = (
   const cache = createCache({ key: 'jaf', container: styleHost })
   createRoot(appHost).render(<CacheProvider value={cache}>{app}</CacheProvider>)
 }
-
-export const attachReactApp = (
-  app: React.ReactNode,
-  inputContainer: HTMLElement
-) => {
-  // cant just append the react app to the root element...
-  // it makes the element disappear
-  const rootElement = document.createElement('div')
-  inputContainer.insertBefore(rootElement, inputContainer.lastChild)
-  renderWidget(rootElement, app)
-}

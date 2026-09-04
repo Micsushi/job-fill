@@ -18,8 +18,25 @@ export type AnswerValueMethods = {
   prepForFill: (answers: EditableAnswer[]) => any[]
 }
 
+/**
+ * These pages re-render and can drop our widget while leaving the field in
+ * place. The marker attribute alone would leave that field permanently
+ * without controls, so a missing widget counts as unregistered.
+ *
+ * Bounded on purpose: if a widget ever landed outside its field this check
+ * could never be satisfied, and an unbounded retry would rebuild it on every
+ * mutation forever.
+ */
+const MAX_REATTACHMENTS = 3
+
 export function isRegistered(el: HTMLElement): boolean {
-  return el.hasAttribute('job-app-filler')
+  if (!el.hasAttribute('job-app-filler')) return false
+  if (el.querySelector('.jaf-widget')) return true
+
+  const attempts = Number(el.getAttribute('jaf-reattach') || '0')
+  if (attempts >= MAX_REATTACHMENTS) return true
+  el.setAttribute('jaf-reattach', String(attempts + 1))
+  return false
 }
 
 /**
