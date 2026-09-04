@@ -49,6 +49,54 @@ export const normalizeFieldName = (name: string): string => {
     .trim()
 }
 
+/**
+ * Words that carry no identifying signal in a form label. Dropped before
+ * comparing, so a long question is judged on its distinctive words rather
+ * than on the grammar around them.
+ */
+const STOPWORDS = new Set([
+  'a', 'an', 'the', 'of', 'for', 'to', 'in', 'on', 'at', 'as', 'by', 'is',
+  'are', 'was', 'do', 'does', 'did', 'you', 'your', 'we', 'us', 'our', 'will',
+  'would', 'can', 'may', 'if', 'or', 'and', 'be', 'been', 'it', 'this', 'that',
+  'with', 'which', 'where', 'who', 'whom', 'what', 'when', 'have', 'has',
+  'any', 'all', 'please', 'select', 'choose', 'enter', 'provide', 'now',
+  'not', 'my', 'me', 'i', 'am', 'from', 'about', 'there', 'their',
+])
+
+const fieldTokens = (value: string): Set<string> => {
+  const tokens = normalizeFieldName(value)
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter((token) => token && !STOPWORDS.has(token))
+  return new Set(tokens)
+}
+
+/**
+ * Fraction of distinctive words the two names share, measured against the
+ * longer of the two.
+ *
+ * Measuring against the longer name is the point. "Country" appears inside
+ * "Do you now, or will you in the future, require sponsorship for an
+ * employment visa in the country where the position is located?", and a
+ * one-sided containment check would call that a match -- which is how a
+ * country dropdown ended up being offered a yes/no sponsorship answer.
+ */
+const tokenSymmetry = (a: Set<string>, b: Set<string>): number => {
+  if (!a.size || !b.size) return 0
+  let shared = 0
+  a.forEach((token) => {
+    if (b.has(token)) shared++
+  })
+  return shared / Math.max(a.size, b.size)
+}
+
+/**
+ * Two names must be substantially the same set of words, not merely
+ * overlapping. 0.5 keeps "Email" / "Email Address" and "Phone" /
+ * "Phone Number" while rejecting a short label against a long question.
+ */
+const MIN_TOKEN_SYMMETRY = 0.5
+
 export function areFieldNamesCompatible(
   query: string,
   candidate: string
@@ -58,6 +106,12 @@ export function areFieldNamesCompatible(
 
   if (!q || !c) return false
   if (q === c) return true
+
+  // Scope check before the topical rules below. Without it a fuzzy index hit
+  // on a single shared word is enough to pair unrelated questions.
+  if (tokenSymmetry(fieldTokens(q), fieldTokens(c)) < MIN_TOKEN_SYMMETRY) {
+    return false
+  }
 
   // Middle name vs first/last/full name
   const qHasMiddle = /\b(middle)\b/.test(q)
@@ -453,6 +507,69 @@ export class DataStore {
   }
 
 
+
+  /**
+   * Repair records left behind by older versions.
+   *
+   * Answers used to be keyed on `page`, the job posting title, so saving the
+   * same answer on a second posting stored a second copy rather than matching
+   * the first. That is why a field can show the same value listed twice.
+   *
+   * Removes exact duplicates (same normalised question, section, type and
+   * value) keeping the earliest, and strips the stale `page` key so what
+   * remains matches across postings.
+   */
+  async cleanUp(): Promise<{
+    duplicatesRemoved: number
+    recordsRepaired: number
+    total: number
+  }> {
+    if (!this.loaded) {
+      await this.load()
+    }
+
+    const seen = new Set<string>()
+    const duplicates: number[] = []
+    let recordsRepaired = 0
+
+    for (const record of this.getAll()) {
+      const loose = record as any
+      if ('page' in loose) {
+        delete loose.page
+        recordsRepaired++
+      }
+
+      const key = [
+        normalizeFieldName(loose.fieldName || ''),
+        loose.section || '',
+        loose.fieldType || '',
+        JSON.stringify(loose.answer ?? null),
+      ].join(' ')
+
+      if (seen.has(key)) {
+        duplicates.push(loose.id)
+      } else {
+        seen.add(key)
+      }
+    }
+
+    // Remove directly rather than through delete(), which persists each time.
+    duplicates.forEach((id) => {
+      const record = this.store.get(id)
+      if (!record) return
+      this.exactMatchIndex.delete(record.fieldName, id)
+      this.ts_index.removeDoc({ fieldName: record.fieldName, id })
+      this.store.delete(id)
+    })
+
+    await this.persist()
+    return {
+      duplicatesRemoved: duplicates.length,
+      recordsRepaired,
+      total: this.store.size,
+    }
+  }
+
   exactSearch(fieldName: string): SavedAnswer[] {
     const matchingIds = this.exactMatchIndex.get(fieldName)
     return matchingIds.map((id: number) => {
@@ -469,7 +586,10 @@ export class DataStore {
         return areFieldNamesCompatible(fieldName, item.fieldName)
       })
       .map(({ ref, score }) => {
-        return { ...this.get(parseInt(ref)), matchType: `Similar: ${score}` }
+        return {
+          ...this.get(parseInt(ref)),
+          matchType: `Similar: ${score.toFixed(2)}`,
+        }
       })
   }
 

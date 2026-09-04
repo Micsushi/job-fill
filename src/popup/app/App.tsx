@@ -34,6 +34,7 @@ import {
   UploadFileIcon,
   AutoFixHighIcon,
   ClearIcon,
+  CleaningServicesIcon,
   FiberManualRecordIcon,
 } from '@src/shared/utils/icons'
 import { LogoTitleBar } from '@src/shared/components/LogoTitleBar'
@@ -99,6 +100,33 @@ export const App: FC<{}> = () => {
     chrome.runtime.onMessage.addListener(onMessage)
     return () => chrome.runtime.onMessage.removeListener(onMessage)
   }, [])
+
+  /**
+   * One-off repair for stores built by older versions, which keyed answers on
+   * the job posting title and so accumulated duplicates.
+   */
+  const handleCleanUp = async () => {
+    const ok = window.confirm(
+      'Remove duplicate answers and repair old records?\n\n' +
+        'Duplicates are records with the same question, section and value. ' +
+        'The earliest copy of each is kept. Export first if you want a backup.'
+    )
+    if (!ok) return
+    try {
+      const { duplicatesRemoved, recordsRepaired, total } =
+        await answers1010.cleanUp()
+      await refreshCount()
+      if (!duplicatesRemoved && !recordsRepaired) {
+        showNotify('Database is already clean.')
+      } else {
+        showNotify(
+          `Removed ${duplicatesRemoved} duplicate(s), repaired ${recordsRepaired}. ${total} left.`
+        )
+      }
+    } catch (e) {
+      showNotify('Clean up failed.')
+    }
+  }
 
   const refreshCount = async () => {
     try {
@@ -319,6 +347,17 @@ export const App: FC<{}> = () => {
                   sx={{ flex: 1.2 }}
                 >
                   Manage DB
+                </Button>
+              </Stack>
+              <Stack direction="row" spacing={1}>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<CleaningServicesIcon />}
+                  onClick={handleCleanUp}
+                  sx={{ flex: 1 }}
+                >
+                  Clean Up DB
                 </Button>
               </Stack>
             </Stack>
