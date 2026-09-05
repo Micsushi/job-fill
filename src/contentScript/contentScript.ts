@@ -9,6 +9,10 @@ import {
   PageActionResult,
 } from '@src/shared/utils/pageActions'
 import { answers1010, migrate1010 } from './utils/storage/Answers1010'
+import {
+  documentKindFor,
+  getDefaultDocuments,
+} from '@src/shared/utils/storage/defaultDocuments'
 import { convert106To1010, convert1010To106 } from './utils/storage/DataStore'
 import { SavedAnswer } from './utils/storage/DataStoreTypes'
 import { migrateEducation } from './utils/storage/migrateEducationSectionNames'
@@ -30,6 +34,15 @@ server.register('updateAnswer', async (newAnswer: Answer) => {
 server.register('getAnswer', async (fieldPath: FieldPath) => {
   return answers1010.search(fieldPath).map((record) => convert1010To106(record))
 })
+
+/** Fallback document for a file field that has no answer of its own. */
+server.register('getDefaultDocument', async (fieldName: string) => {
+  const docs = await getDefaultDocuments()
+  return docs[documentKindFor(fieldName)] || null
+})
+
+server.register('undoAnswer', async () => answers1010.undo())
+server.register('redoAnswer', async () => answers1010.redo())
 
 server.register('deleteAnswer', async (id: number) => {
   return answers1010.delete(id)

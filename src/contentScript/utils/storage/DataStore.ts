@@ -44,7 +44,7 @@ export const convert1010To106 = (
 /**
  * Bump when a new one-off repair is added, so it runs once for existing users.
  */
-const MAINTENANCE_VERSION = 1
+const MAINTENANCE_VERSION = 2
 
 /**
  * How many actions can be taken back. Entries hold only the records an action
@@ -613,6 +613,7 @@ export class DataStore {
     recordsRepaired: number
     total: number
   }> {
+    // Undoable: cleanUp records one history entry for everything it removes.
     if (!this.loaded) {
       await this.load()
     }
@@ -620,6 +621,14 @@ export class DataStore {
     const seen = new Set<string>()
     const duplicates: number[] = []
     let recordsRepaired = 0
+
+    // An answer with no value fills nothing, and competes with real answers
+    // for the same question. It is dead weight, not a preference.
+    const isBlank = (value: any) =>
+      value === null ||
+      value === undefined ||
+      (typeof value === 'string' && !value.trim()) ||
+      (Array.isArray(value) && value.filter((v) => String(v ?? '').trim()).length === 0)
 
     for (const record of this.getAll()) {
       const loose = record as any
@@ -635,7 +644,7 @@ export class DataStore {
         JSON.stringify(loose.answer ?? null),
       ].join(String.fromCharCode(0))
 
-      if (seen.has(key)) {
+      if (isBlank(loose.answer) || seen.has(key)) {
         duplicates.push(loose.id)
       } else {
         seen.add(key)
@@ -654,7 +663,7 @@ export class DataStore {
     })
 
     if (removed.length && !this.suspendHistory) {
-      this.record(`Remove ${removed.length} duplicate(s)`, removed, [])
+      this.record(`Tidy up ${removed.length} answer(s)`, removed, [])
     }
 
     await this.persist()

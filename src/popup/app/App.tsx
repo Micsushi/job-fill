@@ -34,6 +34,12 @@ import {
 import { answers1010 } from '@src/contentScript/utils/storage/Answers1010'
 import { DatabaseManager } from './DatabaseManager'
 import {
+  DefaultDocuments,
+  getDefaultDocuments,
+  setDefaultDocument,
+} from '@src/shared/utils/storage/defaultDocuments'
+import { fileToLocalStorage } from '@src/shared/utils/file'
+import {
   PAGE_ACTION_MESSAGE,
   PAGE_ACTION_RESULT_MESSAGE,
   PageActionResult,
@@ -67,6 +73,7 @@ export const App: FC<{}> = () => {
   const [pendingImportJson, setPendingImportJson] = useState<any>(null)
   const [importFileName, setImportFileName] = useState<string>('')
   const [importMode, setImportMode] = useState<'merge' | 'replace'>('merge')
+  const [documents, setDocuments] = useState<DefaultDocuments>({})
   const [undoLabel, setUndoLabel] = useState<string | null>(null)
   const [redoLabel, setRedoLabel] = useState<string | null>(null)
 
@@ -135,8 +142,8 @@ export const App: FC<{}> = () => {
    */
   const handleCleanUp = async () => {
     const ok = window.confirm(
-      'Remove duplicate answers and repair old records?\n\n' +
-        'Duplicates are records with the same question, section and value. ' +
+      'Remove duplicate and empty answers, and repair old records?\n\n' +
+        'Empty answers fill nothing. Duplicates share a question, section and value. ' +
         'The earliest copy of each is kept. Export first if you want a backup.'
     )
     if (!ok) return
@@ -148,12 +155,39 @@ export const App: FC<{}> = () => {
         showNotify('Database is already clean.')
       } else {
         showNotify(
-          `Removed ${duplicatesRemoved} duplicate(s), repaired ${recordsRepaired}. ${total} left.`
+          `Removed ${duplicatesRemoved}, repaired ${recordsRepaired}. ${total} left. Undo is available.`
         )
       }
     } catch (e) {
       showNotify('Clean up failed.')
     }
+  }
+
+  const refreshDocuments = async () => setDocuments(await getDefaultDocuments())
+
+  /**
+   * One resume for every file field on every site. Saving against a single
+   * job's field only ever helped that field.
+   */
+  const handleDocumentUpload = async (
+    kind: 'resume' | 'coverLetter',
+    fileList: FileList | null
+  ) => {
+    const file = fileList?.[0]
+    if (!file) return
+    try {
+      await setDefaultDocument(kind, await fileToLocalStorage(file))
+      await refreshDocuments()
+      showNotify(`${file.name} saved as your default.`)
+    } catch {
+      showNotify('Could not read that file.')
+    }
+  }
+
+  const handleDocumentRemove = async (kind: 'resume' | 'coverLetter') => {
+    await setDefaultDocument(kind, null)
+    await refreshDocuments()
+    showNotify('Default document removed.')
   }
 
   const refreshHistory = () => {
@@ -196,6 +230,7 @@ export const App: FC<{}> = () => {
 
   useEffect(() => {
     refreshCount().then(refreshHistory)
+    refreshDocuments()
     if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
       const listener = (changes: any, area: string) => {
         if (area === 'local' && changes.answers1010) {
@@ -384,6 +419,65 @@ export const App: FC<{}> = () => {
               >
                 Tidy
               </Button>
+            </Stack>
+          </Box>
+
+          {/* Documents used by any file field with no answer of its own. */}
+          <Box>
+            <Typography sx={{ fontSize: 13, fontWeight: 700, mb: 1 }}>
+              Default documents
+            </Typography>
+            <Stack spacing={0.75}>
+              {(['resume', 'coverLetter'] as const).map((kind) => {
+                const doc = documents[kind]
+                const label = kind === 'resume' ? 'Resume' : 'Cover letter'
+                return (
+                  <Stack
+                    key={kind}
+                    direction="row"
+                    spacing={0.75}
+                    alignItems="center"
+                  >
+                    <Typography
+                      sx={{
+                        fontSize: 12,
+                        color: doc ? 'text.primary' : 'text.secondary',
+                        flex: 1,
+                        minWidth: 0,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                      title={doc ? doc.name : undefined}
+                    >
+                      {doc ? `${label}: ${doc.name}` : `${label}: none`}
+                    </Typography>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      component="label"
+                      sx={buttonSx}
+                    >
+                      {doc ? 'Replace' : 'Upload'}
+                      <input
+                        type="file"
+                        hidden
+                        onChange={(e) => handleDocumentUpload(kind, e.target.files)}
+                      />
+                    </Button>
+                    {doc && (
+                      <Button
+                        size="small"
+                        variant="text"
+                        onClick={() => handleDocumentRemove(kind)}
+                        sx={{ ...buttonSx, color: 'text.secondary' }}
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </Stack>
+                )
+              })}
             </Stack>
           </Box>
 

@@ -9,6 +9,7 @@ import { GreenhouseReactBaseInput } from "./GreenhouseReactBaseInput";
 import { xpaths } from "./xpaths";
 import { Answer } from "@src/shared/utils/types";
 import { saveButtonClickHandlers } from "../../../hooks/saveButtonClickHandlers";
+import { contentScriptAPI } from '../../contentScriptApi'
 
 
 export class File extends GreenhouseReactBaseInput<any> {
@@ -110,18 +111,36 @@ export class File extends GreenhouseReactBaseInput<any> {
   }
 
   
+  /**
+   * The answer saved against this exact field, or the account-wide default
+   * document. Without the fallback a resume has to be saved once per field
+   * per site, which is the manual step this replaces.
+   */
+  private async fileToFill(): Promise<any | null> {
+    const answers = await this.answer()
+    if (answers.length > 0) return answers[0].answer
+    try {
+      const res = await contentScriptAPI.send(
+        'getDefaultDocument',
+        this.fieldName
+      )
+      return res.ok ? res.data : null
+    } catch {
+      return null
+    }
+  }
+
   async fill(): Promise<void> {
     await fieldFillerQueue.enqueue(async () => {
-      const answers = await this.answer()
-      if (answers.length > 0) {
-        if (this.deleteButtonElement) {
-          this.deleteButtonElement.click()
-          await sleep(500)
-        }
-        const file = localStorageToFile(answers[0].answer)
-        const reactProps = getReactProps(this.inputElement)
-        reactProps?.onChange({target: {files: [file]}})
+      const stored = await this.fileToFill()
+      if (!stored) return
+      if (this.deleteButtonElement) {
+        this.deleteButtonElement.click()
+        await sleep(500)
       }
+      const file = localStorageToFile(stored)
+      const reactProps = getReactProps(this.inputElement)
+      reactProps?.onChange({ target: { files: [file] } })
     })
   }
 }

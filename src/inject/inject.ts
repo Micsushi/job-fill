@@ -3,6 +3,7 @@ import { RegisterInputs as greenhouse } from './app/services/formFields/greenhou
 import { RegisterInputs as greenhouseReact } from './app/services/formFields/greenhouseReact'
 import { RegisterInputs as lever } from './app/services/formFields/lever'
 import { listenForPageActions } from './pageActions'
+import { listenForUndoShortcut } from './undoShortcut'
 import { debugEnabled, debugLog } from '@src/shared/utils/debug'
 
 type InputSetup = (node: Node) => Promise<void>
@@ -42,6 +43,7 @@ const getRegisterInput = (domain: string): InputSetup | undefined => {
 
 const run = async () => {
   listenForPageActions()
+  listenForUndoShortcut()
   if (debugEnabled()) {
     debugLog(`diagnostics on for ${window.location.host}`)
   } else {

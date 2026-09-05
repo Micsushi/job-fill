@@ -8,6 +8,7 @@ import { Answer } from '@src/shared/utils/types'
 import fieldFillerQueue from '@src/shared/utils/fieldFillerQueue'
 import { dispatchFileDragEvent } from '@src/shared/utils/fileUploadHelpers'
 import { saveButtonClickHandlers } from '../../../hooks/saveButtonClickHandlers'
+import { contentScriptAPI } from '../../contentScriptApi'
 
 
 export class File extends GreenhouseBaseInput<any> {
@@ -117,14 +118,32 @@ export class File extends GreenhouseBaseInput<any> {
     ].join('')
     return getElement(this.element, XPATH)?.innerText || ''
   }
+  /**
+   * The answer saved against this exact field, or the account-wide default
+   * document. Without the fallback a resume has to be saved once per field
+   * per site, which is the manual step this replaces.
+   */
+  private async fileToFill(): Promise<any | null> {
+    const answers = await this.answer()
+    if (answers.length > 0) return answers[0].answer
+    try {
+      const res = await contentScriptAPI.send(
+        'getDefaultDocument',
+        this.fieldName
+      )
+      return res.ok ? res.data : null
+    } catch {
+      return null
+    }
+  }
+
   async fill(): Promise<void> {
     await fieldFillerQueue.enqueue(async () => {
-      const answer = (await this.answer()) || []
-      if (answer.length > 0 && answer[0].answer) {
-        const file = localStorageToFile(answer[0].answer)
-        this.deleteButtonElement?.click()
-        dispatchFileDragEvent('drop', this.dropZoneElement, [file])
-      }
+      const stored = await this.fileToFill()
+      if (!stored) return
+      const file = localStorageToFile(stored)
+      this.deleteButtonElement?.click()
+      dispatchFileDragEvent('drop', this.dropZoneElement, [file])
     })
   }
 }

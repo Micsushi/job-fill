@@ -14,6 +14,7 @@ import { EditableAnswerState } from './hooks/useEditableAnswerState'
 import { PopperState, usePopperState } from './hooks/usePopperState'
 import { contentScriptAPI } from './services/contentScriptApi'
 import { debugError, debugField } from '@src/shared/utils/debug'
+import { ANSWERS_CHANGED_EVENT } from '../undoShortcut'
 
 export type FillButtonState = {
   isDisabled: boolean
@@ -86,8 +87,12 @@ export const ContextProvider: FC<{
       }
     })()
     backend.element.addEventListener(backend.reactMessageEventId, refresh)
+    // Undo/redo rewrites answers behind our back; re-read rather than
+    // showing a list that no longer matches storage.
+    document.addEventListener(ANSWERS_CHANGED_EVENT, init)
     return () => {
       backend.element.removeEventListener(backend.reactMessageEventId, refresh)
+      document.removeEventListener(ANSWERS_CHANGED_EVENT, init)
     }
   }, [])
 
