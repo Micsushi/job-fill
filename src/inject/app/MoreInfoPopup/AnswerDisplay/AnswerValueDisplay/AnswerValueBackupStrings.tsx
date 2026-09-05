@@ -17,6 +17,8 @@ import {
   InputIcon,
   DeleteIcon,
 } from '@src/shared/utils/icons'
+import { t } from '../../tokens'
+import { EmptyValue } from './EmptyValue'
 
 export const AnswerValueBackupStrings: FC<{ id: number }> = ({ id }) => {
   const { editableAnswerState, backend } = useAppContext()
@@ -61,14 +63,16 @@ export const AnswerValueBackupStrings: FC<{ id: number }> = ({ id }) => {
   
   return (
     <>
-      <Typography>Values:</Typography>
       <Grid container direction={'column'} spacing={1}>
+        {editedAnswer.value.length === 0 && <EmptyValue />}
         {editedAnswer.value.map(([answer, valueEditable], answerValueId) => {
           return (
             <Grid item key={`${id}-${answerValueId}`}>
               {!valueEditable ? (
                 <>
-                  <Typography display="inline-flex">{answer}</Typography>
+                  <Typography display="inline-flex" sx={{ font: t.font, color: t.text }}>
+                    {answer || <EmptyValue />}
+                  </Typography>
                   <IconButton
                     onClick={() => setValueEditable(answerValueId, true)}
                   >
