@@ -14,10 +14,10 @@ import {
   Snackbar,
   SnackbarCloseReason,
   Stack,
+  ThemeProvider,
   Typography,
 } from '@mui/material'
 
-import { ThemeProvider } from '@emotion/react'
 import { theme } from '@src/shared/utils/react'
 import {
   GitHubIcon,

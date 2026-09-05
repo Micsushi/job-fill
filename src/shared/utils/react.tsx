@@ -2,9 +2,15 @@ import { createTheme } from "@mui/material";
 import { teal } from "@mui/material/colors";
 import { cloneElement, ReactElement } from "react";
 
-const baseTheme = createTheme({})
-
-export const theme = createTheme(baseTheme, {
+/**
+ * Built in one call on purpose.
+ *
+ * Merging a palette onto an already-created theme keeps the base theme's
+ * derived values: setting only `primary.main` left `primary.dark` as MUI's
+ * default blue, so anything using it came out blue on a teal UI. Passing the
+ * palette to createTheme directly lets MUI derive light and dark from ours.
+ */
+export const theme = createTheme({
   typography: {
     allVariants: {
       color: teal[800],
@@ -14,7 +20,10 @@ export const theme = createTheme(baseTheme, {
     primary: {
       main: teal[600],
     },
-    secondary: { main: teal[50] },
+    // teal[50] is near white and unreadable as a control colour.
+    secondary: {
+      main: teal[800],
+    },
   },
 })
 
